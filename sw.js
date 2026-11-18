@@ -1,6 +1,6 @@
 /* Service worker : met l'appli en cache pour qu'elle s'ouvre même sans réseau.
    Après chaque modification, change VERSION, sinon les téléphones gardent l'ancienne version. */
-const VERSION = "perfectype-v1";
+const VERSION = "perfectype-v2";
 const FICHIERS = [
   "./", "index.html", "css/style.css", "js/app.js", "js/ia.js", "js/vendor/anthropic.mjs",
   "manifest.webmanifest", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png"

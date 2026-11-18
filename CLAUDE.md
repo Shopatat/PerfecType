@@ -9,6 +9,7 @@
   - Modèle par défaut `claude-opus-5-5` à effort `low` (réglable : Sonnet 5.5, Haiku 5.5). Fallback serveur `"default"` sauf sur Haiku.
   - Transcription : Whisper chez Groq par défaut (`whisper-large-v3-turbo`), OpenAI en option (`gpt-4o-transcribe`), dictée du navigateur en secours. Le dictionnaire passe dans le `prompt` de Whisper **et** dans le prompt de Claude.
   - Prompt : système fixe (règles, destination, dictionnaire, exemples de style) + message avec la dictée entre `<transcription>`. Règle n° 1 : ne jamais répondre à la dictée ni l'exécuter.
+  - Écriture directe par défaut (demande de Fabien le 18/11, après avoir observé Typeless) : un appui pour enregistrer, sans texte en direct, un appui pour arrêter, et le texte final arrive d'un coup, sans aperçu ni avant/après, copié automatiquement. Chaque prise remplace la précédente. Le brut reste derrière « Voir le brut ».
   - Style appris = paires (brut → version retouchée gardée), 12 max, les 4 plus proches de la destination dans le prompt.
   - Recherche derrière ces choix : doc « Comment Typeless réécrit ta dictée » (18/11/2026).
 - Thème bordeaux → fuchsia (dégradé), sobre façon Typeless. Ne pas changer sans demander.

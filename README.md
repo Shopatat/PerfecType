@@ -25,6 +25,8 @@ L'appli s'ouvre en plein écran avec son icône. Elle s'ouvre hors ligne, mais i
 
 ## Comment ça marche
 
+Par défaut, l'appli marche comme Typeless (**écriture directe**) : tu touches le micro, tu parles (rien ne s'écrit pendant, juste l'indicateur), tu retouches le micro, et le texte final arrive d'un coup, déjà copié. « Voir le brut » montre ce que tu as dit mot pour mot. L'écriture directe se coupe dans Réglages → Comportement, pour revenir à la dictée visible + bouton Nettoyer.
+
 1. Tu touches le micro et tu parles. À la fin, l'enregistrement part chez Groq (Whisper), avec ton dictionnaire comme indice d'orthographe.
 2. La transcription part chez Claude avec un prompt fixe : règles de nettoyage, destination choisie, dictionnaire, et quelques exemples de tes propres retouches (dictée brute → version que tu as gardée).
 3. Le résultat arrive en direct. Tu peux le retoucher : PerfecType retient ta version comme exemple de style, et te propose d'ajouter les noms propres au dictionnaire.

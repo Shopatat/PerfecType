@@ -11,7 +11,7 @@ import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, MODE
     old(k, d){ try { const v = localStorage.getItem("pp2-" + k); return v == null ? d : JSON.parse(v); } catch { return d; } }
   };
   const oldSettings = S.old("settings", {});
-  const settings = Object.assign({ auto: true, copy: false, lists: true, learn: true, lang: "fr", app: "partout", mode: "dicter", target: "en", appearance: "system", targets: ["en", "es", "it", "de"], model: "claude-opus-5-5", stt: "groq" }, S.get("settings", {}));
+  const settings = Object.assign({ auto: true, copy: false, lists: true, learn: true, lang: "fr", app: "partout", mode: "dicter", target: "en", appearance: "system", targets: ["en", "es", "it", "de"], model: "claude-opus-5-5", stt: "groq", direct: true }, S.get("settings", {}));
   if (!MODELES[settings.model]) settings.model = "claude-opus-5-5";
   if (!STT[settings.stt]) settings.stt = "groq";
   let cles = Object.assign({ claude: "", groq: "", openai: "" }, S.get("cles", {}));
@@ -63,6 +63,10 @@ import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, MODE
   };
 
   /* ================= État ================= */
+  let showRaw = false;
+  /* Écriture directe (façon Typeless) : on parle, on rappuie, le texte final arrive d'un coup, déjà copié.
+     Pas de texte en direct, pas d'aperçu ; la dictée brute reste accessible d'un geste. */
+  const isDirect = () => !!(settings.direct && dict && (settings.mode === "dicter" || settings.mode === "traduire"));
   let isExample = false, lastRaw = "", lastAI = "", versions = [], running = null, dict = null, learnedFor = "";
 
   /* ================= Utilitaires ================= */
@@ -159,6 +163,12 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     $("segWrap").hidden = m !== "dicter";
     $("metrics").hidden = m !== "dicter";
     if (m !== "dicter") setSeg(false);
+    const d = isDirect();
+    document.body.classList.toggle("direct", d);
+    raw.hidden = d && !showRaw; $("goRow").hidden = d && !showRaw;
+    $("rawToggle").hidden = !d; $("rawToggle").textContent = showRaw ? "Masquer" : "Voir le brut";
+    $("rawLabel").textContent = d ? (m === "traduire" ? "Parle, ça sort traduit" : "Parle, ça s'écrit propre") : M.raw;
+    if (d) { $("segWrap").hidden = true; setSeg(false); }
     renderQuick();
   }
   document.querySelectorAll(".mode").forEach(b => b.onclick = () => {
@@ -330,15 +340,15 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     $("goLabel").textContent = on ? (label || "…") + " · Stop" : MODES[settings.mode].go;
     $("quick").querySelectorAll("button").forEach(b => b.disabled = on);
   }
-  async function runClaude(p, label){
+  async function runClaude(p, label, quiet){
     if (!cles.claude) { setStatus("Ajoute ta clé Claude dans les Réglages pour commencer."); go("reglages"); setTimeout(() => $("keyClaude").focus(), 80); return null; }
     if (running) running.abort();
     const ctrl = new AbortController(); running = ctrl;
     setStatus(""); setBusy(true, label); $("learn").hidden = true;
     const before = out.value; setSeg(false);
-    out.value = ""; out.placeholder = "Ça réfléchit…";
+    if (quiet) orbState("thinking"); else { out.value = ""; out.placeholder = "Ça réfléchit…"; }
     try {
-      const text = await appelClaude({ cle: cles.claude, modele: settings.model, systeme: p.systeme, message: p.message, maxTokens: p.maxTokens, effort: p.effort, signal: ctrl.signal, onText: t => { out.value = t; } });
+      const text = await appelClaude({ cle: cles.claude, modele: settings.model, systeme: p.systeme, message: p.message, maxTokens: p.maxTokens, effort: p.effort, signal: ctrl.signal, onText: quiet ? null : t => { out.value = t; } });
       if (before.trim()) { versions.push({ out: before, raw: lastRaw, ai: lastAI }); updateUndo(); }
       return text;
     } catch (e) {
@@ -348,16 +358,17 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
       return null;
     } finally {
       if (running === ctrl) { running = null; setBusy(false); }
+      if (quiet) orbState("idle");
       out.placeholder = "Le résultat arrive ici. Tu peux le retoucher, PerfecType apprend de tes corrections.";
     }
   }
 
-  async function goAction(){
+  async function goAction(direct){
     if (isExample) { leaveExample(); raw.focus(); return; }
     const m = settings.mode, text = raw.value.trim(), context = ctx.value.trim();
     if (!text) { setStatus(m === "modifier" ? "Dis ou écris ce qu'il faut changer." : m === "demander" ? "Pose ta question d'abord." : "Dicte ou écris quelque chose d'abord."); return; }
     if (m === "modifier" && !context) { setStatus("Colle d'abord le texte à modifier."); ctx.focus(); return; }
-    const res = await runClaude(buildPrompt(m, text, m === "traduire" ? "" : context), ({ dicter: "Nettoyage", traduire: "Traduction", modifier: "Modification", demander: "Réflexion" })[m]);
+    const res = await runClaude(buildPrompt(m, text, m === "traduire" ? "" : context), ({ dicter: "Nettoyage", traduire: "Traduction", modifier: "Modification", demander: "Réflexion" })[m], direct === true);
     if (res == null) return;
     out.value = res; lastRaw = text; lastAI = res; learnedFor = "";
     if (m === "dicter" || m === "traduire") {
@@ -369,7 +380,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     updateMetrics();
     if (m === "dicter") garde(text, res);
     addHistory(res, m, m === "traduire" ? LANGS[settings.target] : m === "dicter" ? appById(settings.app).label : MODES[m].go);
-    if (settings.copy) copyText(res, true);
+    if (settings.copy || direct === true) copyText(res, true);
     if (matchMedia("(max-width:700px)").matches) $("resultCard").scrollIntoView({ behavior: "smooth", block: "start" });
   }
   /* Garde-fou : si le résultat a fondu ou gonflé, on propose la dictée brute. */
@@ -495,6 +506,8 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
 
   /* ================= Réglages ================= */
   function bindSwitch(id, key){ const el = $(id); const draw = () => el.setAttribute("aria-checked", String(!!settings[key])); el.onclick = () => { settings[key] = !settings[key]; saveSettings(); draw(); }; draw(); }
+  bindSwitch("swDirect", "direct"); $("swDirect").addEventListener("click", () => { showRaw = false; renderMode(); });
+  $("rawToggle").onclick = () => { showRaw = !showRaw; renderMode(); if (showRaw) raw.focus(); };
   bindSwitch("swAuto", "auto"); bindSwitch("swCopy", "copy"); bindSwitch("swList", "lists"); bindSwitch("swLearn", "learn");
   function applyAppearance(){
     const r = document.documentElement;
@@ -540,14 +553,15 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     return null;
   }
   function orbState(state){
-    const on = state === "listening" || state === "busy";
+    const on = state === "listening" || state === "busy" || state === "thinking";
     $("orb").classList.toggle("on", on); $("recTag").hidden = state !== "listening";
     $("orb").setAttribute("aria-label", state === "listening" ? "Arrêter" : "Commencer à parler");
-    $("orbLabel").textContent = { listening: "J'écoute…", busy: "Transcription…", starting: "Ouverture du micro…" }[state] || "Touche pour parler";
-    $("orbSub").textContent = state === "listening" ? "Touche quand tu as fini" : state === "busy" ? "Touche pour annuler" : (matchMedia("(pointer:coarse)").matches ? "" : "ou barre d'espace");
+    $("orbLabel").textContent = { listening: "J'écoute…", busy: "Transcription…", thinking: "Mise au propre…", starting: "Ouverture du micro…" }[state] || "Touche pour parler";
+    $("orbSub").textContent = state === "listening" ? "Touche quand tu as fini" : state === "busy" || state === "thinking" ? "Touche pour annuler" : (matchMedia("(pointer:coarse)").matches ? "" : "ou barre d'espace");
   }
   function ajouterDictee(t){
     t = (t || "").trim(); if (!t) return false;
+    if (isDirect()) { raw.value = t; S.set("draft", t); return true; }
     raw.value = raw.value.trim() ? raw.value.replace(/\s*$/, " ") + t : t; S.set("draft", raw.value); return true;
   }
   function setupDictation(){
@@ -558,18 +572,19 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     const mode = modeDictee();
     if (!mode) return;
     if (transcribing) { transcribing.abort(); transcribing = null; orbState("idle"); return; }
+    if (running && isDirect()) { running.abort(); running = null; setBusy(false); orbState("idle"); return; }
     if (mode === "navigateur") {
       if (navDictee.actif()) { navDictee.arreter(); return; }
       leaveExample(); setStatus(""); orbState("listening");
       let fini = false;
       navDictee.demarrer({
         langue: settings.lang,
-        onPartiel: t => { $("partial").textContent = t; $("partial").hidden = !t; },
+        onPartiel: t => { if (isDirect()) return; $("partial").textContent = t; $("partial").hidden = !t; },
         onFin: (t, err) => {
           if (fini) return; fini = true;
           $("partial").hidden = true; orbState("idle");
           if (err === "not-allowed" || err === "service-not-allowed") { setStatus("Micro refusé. Le micro du clavier marche aussi."); return; }
-          if (ajouterDictee(t) && settings.auto) goAction();
+          if (ajouterDictee(t) && (settings.auto || isDirect())) goAction(isDirect());
         }
       });
       return;
@@ -584,7 +599,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
         if (transcribing !== ctrl) return;
         transcribing = null; orbState("idle");
         if (!ajouterDictee(t)) { setStatus("Je n'ai rien compris. Réessaie."); return; }
-        if (settings.auto) goAction();
+        if (settings.auto || isDirect()) goAction(isDirect());
       } catch (e) {
         if (transcribing === ctrl) transcribing = null;
         orbState("idle");
