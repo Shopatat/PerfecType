@@ -246,3 +246,30 @@ body.direct .orb{width:112px;height:112px}
 .stage.live .wave{height:34px;gap:4px}
 .stage.live .wave i{animation:none!important;opacity:1;width:4px;transition:height .08s linear}
 .stage.live .orb-label{font-variant-numeric:tabular-nums}
+
+/* ===== Écoute plein écran =====
+   Un grand disque violet, centré sur le micro, passe de scale(0) à scale(1) : il couvre tout l'écran.
+   transform + opacity uniquement (fluide sur iPhone). À l'arrêt, le même disque se rétracte vers le micro. */
+:root{--veil:radial-gradient(circle at 50% 42%,#B23BE0 0%,#8A2BC9 38%,#5E1B9E 72%,#3E1170 100%)}
+.veil{position:fixed;inset:0;z-index:35;overflow:hidden;color:#fff;cursor:pointer;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.veil-bg{position:absolute;border-radius:50%;background:radial-gradient(circle,#C043E6 0%,#9A30D6 30%,#7422B8 60%,#4C1487 100%);transform:scale(0);will-change:transform;
+  transition:transform .62s cubic-bezier(.22,.8,.24,1)}
+.veil.open .veil-bg{transform:scale(1)}
+.veil.closing .veil-bg{transition:transform .48s cubic-bezier(.6,0,.75,.2)}
+.veil-bg::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,rgba(255,120,200,.35),transparent 55%);animation:veilglow 3.2s ease-in-out infinite}
+@keyframes veilglow{0%,100%{opacity:.55}50%{opacity:1}}
+.veil-in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px 16px calc(24px + env(safe-area-inset-bottom,0px));
+  opacity:0;transform:translateY(10px) scale(.98);transition:opacity .25s ease,transform .35s ease}
+.veil.open .veil-in{opacity:1;transform:none;transition-delay:.28s}
+.veil.closing .veil-in{opacity:0;transition-delay:0s;transition-duration:.15s}
+.veil-orb{position:relative;width:132px;height:132px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.35),0 20px 60px -20px rgba(20,0,40,.6);margin-bottom:6px}
+.veil-orb svg{width:46px;height:46px;position:relative;z-index:1}
+.veil-orb .r{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,255,255,.55);animation:ring 2.2s ease-out infinite;opacity:0}
+.veil-orb .r:nth-child(2){animation-delay:.73s}.veil-orb .r:nth-child(3){animation-delay:1.46s}
+.veil-wave{display:flex;gap:5px;align-items:center;height:56px}
+.veil-wave i{width:5px;height:6px;border-radius:3px;background:#fff;opacity:.9;transition:height .08s linear}
+.veil-time{font-family:var(--display);font-weight:800;font-size:3rem;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.veil-label{font-family:var(--display);font-weight:700;font-size:1.1rem}
+.veil-sub{font-size:.9rem;opacity:.85;text-align:center;max-width:320px;min-height:1.4em}
+.veil-hint{position:absolute;left:0;right:0;bottom:calc(28px + env(safe-area-inset-bottom,0px));text-align:center;font-family:var(--mono);font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;opacity:.75}
+@media (prefers-reduced-motion:reduce){.veil-bg{transition:none!important}.veil.open .veil-bg{transform:scale(1)}.veil-in{transition:opacity .2s!important}}

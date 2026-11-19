@@ -209,6 +209,20 @@
     <button class="tab" role="tab" data-v="reglages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Réglages</button>
   </div>
 </nav>
+<!-- Écoute plein écran : la vague part du micro et couvre tout ; un appui n'importe où arrête. -->
+<div class="veil" id="veil" hidden role="button" aria-label="Arrêter l'enregistrement">
+  <div class="veil-bg" id="veilBg"></div>
+  <div class="veil-in">
+    <div class="veil-orb" aria-hidden="true"><span class="r"></span><span class="r"></span><span class="r"></span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0M12 17.5V21"/></svg>
+    </div>
+    <div class="veil-wave" id="veilWave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+    <div class="veil-time" id="veilTime">0:00</div>
+    <div class="veil-label" id="veilLabel">J'écoute…</div>
+    <div class="veil-sub" id="veilSub">&nbsp;</div>
+    <div class="veil-hint">Touche n'importe où pour arrêter</div>
+  </div>
+</div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <div class="onb" id="onb" hidden>

@@ -1,5 +1,8 @@
 # Avancement
 
+## 19/11/2026 — v5
+- Écoute plein écran (idée de Fabien) : au départ, une vague violette part du micro et couvre tout l'écran ; pendant l'enregistrement, gros chrono, barres de niveau, état de la sauvegarde ; un appui n'importe où arrête, et la vague se rétracte vers le micro. Animation en `transform` seulement (fluide), barre d'état de l'iPhone passée en violet, version simple si « réduire les animations » est activé.
+
 ## 19/11/2026 — v4
 - Pendant l'écoute : barres qui suivent vraiment le micro, chrono, « J'écoute » ou « je n'entends rien », « Tout est sauvegardé sur ton téléphone » et le nombre de morceaux déjà transcrits.
 - Sauvegarde continue : toutes les 4 s, ce qui a été dit part au coffre du téléphone, même au milieu d'un morceau. Si l'appli est fermée en pleine dictée, la dictée revient avec « Renvoyer ».

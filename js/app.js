@@ -1,4 +1,4 @@
-const VERSION_APP = "4 · 19/11/2026";
+const VERSION_APP = "5 · 19/11/2026";
 import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT } from "./ia.js";
 
 (() => {
@@ -555,10 +555,12 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   }
   /* Pendant l'écoute : barres qui suivent vraiment le micro, chrono, et où en est la sauvegarde. */
   let ecouteBoucle = 0;
+  const now0 = () => performance.now();
   const fmtDuree = ms => { const t = Math.floor(ms / 1000); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };
   function boucleEcoute(){
     cancelAnimationFrame(ecouteBoucle);
-    const bars = [...document.querySelectorAll(".wave i")];
+    const bars = [...document.querySelectorAll(".stage .wave i")], vbars = [...document.querySelectorAll("#veilWave i")];
+    const formes = vbars.map((_, k) => 0.35 + 0.65 * Math.sin(Math.PI * (k + 0.5) / vbars.length));
     let lisse = 0, dernierTexte = 0, dernierSon = 0;
     const pas = () => {
       if (!micro.actif()) { bars.forEach(b => b.style.height = ""); $("stage").classList.remove("live"); return; }
@@ -566,23 +568,56 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
       const n = micro.niveau(); lisse = Math.max(n, lisse * 0.85);
       if (n > 0.04) dernierSon = Date.now();
       bars.forEach((b, k) => { const f = [0.5, 0.8, 1, 0.7, 0.95, 0.6, 0.45][k] || 0.7; b.style.height = Math.round(4 + lisse * 30 * f) + "px"; });
+      const t = now0();
+      vbars.forEach((b, k) => { const j = 0.75 + 0.25 * Math.sin(t / 140 + k * 1.7); b.style.height = Math.round(6 + Math.min(1, lisse * 1.6) * 50 * formes[k] * j) + "px"; });
       const now = Date.now();
       if (now - dernierTexte > 300 && session) {
         dernierTexte = now;
         const segs = Object.values(session.segs), faits = segs.filter(x => x.text != null).length;
-        $("orbLabel").textContent = Date.now() - dernierSon < 2500 ? "J'écoute… " + fmtDuree(micro.duree()) : "J'écoute (je n'entends rien)… " + fmtDuree(micro.duree());
+        const entend = Date.now() - dernierSon < 2500;
+        $("veilTime").textContent = fmtDuree(micro.duree());
+        $("veilLabel").textContent = entend ? "J'écoute…" : "Je n'entends rien…";
+        $("veilSub").textContent = (session.sauve ? "Tout est sauvegardé sur ton téléphone" : "Sauvegarde dans un instant") + (faits ? " · " + faits + " morceau" + (faits > 1 ? "x" : "") + " déjà transcrit" + (faits > 1 ? "s" : "") : "");
+        $("orbLabel").textContent = entend ? "J'écoute… " + fmtDuree(micro.duree()) : "J'écoute (je n'entends rien)… " + fmtDuree(micro.duree());
         $("orbSub").textContent = (session.sauve ? "Tout est sauvegardé sur ton téléphone" : "Sauvegarde dans un instant") + (faits ? " · " + faits + " morceau" + (faits > 1 ? "x" : "") + " déjà transcrit" + (faits > 1 ? "s" : "") : "");
       }
       ecouteBoucle = requestAnimationFrame(pas);
     };
     ecouteBoucle = requestAnimationFrame(pas);
   }
+  /* Le voile violet : il part du centre du bouton micro et grandit jusqu'à couvrir l'écran. */
+  let veilFin = 0;
+  function placerVeil(){
+    const o = $("orb").getBoundingClientRect(), cx = o.left + o.width / 2, cy = o.top + o.height / 2;
+    const w = innerWidth, h = innerHeight;
+    const R = Math.ceil(Math.max(Math.hypot(cx, cy), Math.hypot(w - cx, cy), Math.hypot(cx, h - cy), Math.hypot(w - cx, h - cy))) + 4;
+    Object.assign($("veilBg").style, { width: R * 2 + "px", height: R * 2 + "px", left: cx - R + "px", top: cy - R + "px" });
+  }
+  const themeMeta = [...document.querySelectorAll('meta[name="theme-color"]')], themeAvant = themeMeta.map(m => m.content);
+  function ouvrirVeil(){
+    const v = $("veil"); clearTimeout(veilFin);
+    if (!v.hidden && v.classList.contains("open")) return;
+    placerVeil(); v.classList.remove("closing"); v.hidden = false;
+    void v.offsetWidth;            // force le point de départ (disque à 0) avant d'animer
+    v.classList.add("open");
+    themeMeta.forEach(m => m.content = "#5E1B9E");
+  }
+  function fermerVeil(){
+    const v = $("veil"); if (v.hidden) return;
+    placerVeil(); v.classList.add("closing"); v.classList.remove("open");
+    themeMeta.forEach((m, k) => m.content = themeAvant[k]);
+    clearTimeout(veilFin); veilFin = setTimeout(() => { v.hidden = true; v.classList.remove("closing"); }, 520);
+  }
+  $("veil").addEventListener("click", e => { e.preventDefault(); if (micro.actif() || (navDictee && navDictee.actif())) orbClick(); });
+  addEventListener("resize", () => { if (!$("veil").hidden) placerVeil(); });
+
   function orbState(state){
     const on = state === "listening" || state === "busy" || state === "thinking";
     $("orb").classList.toggle("on", on); $("recTag").hidden = state !== "listening";
     $("orb").setAttribute("aria-label", state === "listening" ? "Arrêter" : "Commencer à parler");
     $("orbLabel").textContent = { listening: "J'écoute…", busy: "Transcription…", thinking: "Mise au propre…", starting: "Ouverture du micro…" }[state] || "Touche pour parler";
-    if (state === "listening" && micro.actif()) boucleEcoute();
+    if (state === "listening") { ouvrirVeil(); if (micro.actif()) boucleEcoute(); else { $("veilTime").textContent = ""; $("veilLabel").textContent = "J'écoute…"; $("veilSub").textContent = "Dictée du navigateur"; } }
+    else fermerVeil();
     $("orbSub").textContent = state === "listening" ? "Touche quand tu as fini" : state === "busy" || state === "thinking" ? "Touche pour annuler" : (matchMedia("(pointer:coarse)").matches ? "" : "ou barre d'espace");
   }
   function ajouterDictee(t){
