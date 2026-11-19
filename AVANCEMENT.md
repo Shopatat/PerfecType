@@ -1,5 +1,8 @@
 # Avancement
 
+## 19/11/2026 — v11
+- « Propre » devient « peaufiné » dans l'interface (Texte peaufiné, bouton Peaufiner, « Je peaufine… »), à la demande de Fabien : le texte n'est pas forcément raccourci, il peut aussi être développé.
+
 ## 19/11/2026 — v10
 - Interface épurée : plus de police à chasse fixe ni de petites majuscules espacées, tous les titres d'encadrés dans la police arrondie. Retirés : l'explication sous les modes, le titre au-dessus du micro, la pastille « Exemple », « ou barre d'espace ».
 

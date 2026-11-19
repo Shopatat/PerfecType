@@ -1,4 +1,4 @@
-const VERSION_APP = "10 · 19/11/2026";
+const VERSION_APP = "11 · 19/11/2026";
 import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT } from "./ia.js";
 
 (() => {
@@ -28,7 +28,7 @@ import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coff
 
   /* ================= Constantes ================= */
   const MODES = {
-    dicter:   { go: "Nettoyer", out: "Texte propre", raw: "Ta dictée", ph: "Parle comme tu parles…", desc: "Tu parles, ça sort propre : sans « euh », sans redites, bien ponctué." },
+    dicter:   { go: "Peaufiner", out: "Texte peaufiné", raw: "Ta dictée", ph: "Parle comme tu parles…", desc: "Tu parles, ça sort peaufiné : sans « euh », sans redites, bien ponctué." },
     traduire: { go: "Traduire", out: "Traduction", raw: "Ce que tu veux dire", ph: "Dis-le en français, ça sort dans l'autre langue…", desc: "Dis ton message dans ta langue, il sort prêt à envoyer dans une autre." },
     modifier: { go: "Modifier", out: "Texte modifié", raw: "Ta consigne", ph: "Ex. : rends-le plus court et plus poli", desc: "Colle un texte, dis ce qu'il faut changer, récupère la nouvelle version." },
     demander: { go: "Demander", out: "Réponse", raw: "Ta question", ph: "Ex. : résume ce mail en trois points", desc: "Pose une question, sur un texte collé ou sur n'importe quoi." }
@@ -633,7 +633,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     const on = state === "listening" || state === "busy" || state === "thinking";
     $("orb").classList.toggle("on", on); $("recTag").hidden = state !== "listening";
     $("orb").setAttribute("aria-label", state === "listening" ? "Arrêter" : "Commencer à parler");
-    $("orbLabel").textContent = { listening: "J'écoute…", busy: "Transcription…", thinking: "Mise au propre…", starting: "Ouverture du micro…" }[state] || "Touche pour parler";
+    $("orbLabel").textContent = { listening: "J'écoute…", busy: "Transcription…", thinking: "Je peaufine…", starting: "Ouverture du micro…" }[state] || "Touche pour parler";
     if (state === "listening") { ouvrirVeil(); if (micro.actif()) boucleEcoute(); else { $("veilTime").textContent = ""; $("veilLabel").textContent = "J'écoute…"; $("veilSub").textContent = "Dictée du navigateur"; } }
     else fermerVeil();
     $("orbSub").textContent = state === "listening" ? "Touche quand tu as fini" : state === "busy" || state === "thinking" ? "Touche pour annuler" : "";
@@ -822,7 +822,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
 
   /* ================= Présentation ================= */
   const ONB = [
-    { t: "Parle, ça s'écrit propre", p: "Les « euh », les redites et les « non pardon » disparaissent. La ponctuation arrive toute seule.", i: '<path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/>' },
+    { t: "Parle, c'est peaufiné", p: "Les « euh », les redites et les « non pardon » disparaissent. La ponctuation arrive toute seule.", i: '<path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/>' },
     { t: "Choisis où ça va", p: "Email, message, Slack, LinkedIn, prompt pour une IA… le ton s'adapte à la destination.", i: '<rect x="3" y="5" width="18" height="14" rx="3"/><path d="M3 8l9 6 9-6"/>' },
     { t: "Traduis, modifie, demande", p: "Dicte en français, sors en anglais. Colle un texte et dis quoi changer. Ou pose une question.", i: '<path d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/>' },
     { t: "Branche tes IA", p: "Dans Réglages, colle ta clé Claude (et une clé Groq pour le micro). Elles restent sur ton téléphone.", i: '<circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M14 9l2 2"/>' },

@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>PerfecType</title>
-<meta name="description" content="Tu parles, ça s'écrit propre.">
+<meta name="description" content="Tu parles, ça s'écrit peaufiné.">
 <meta name="theme-color" content="#F7F4FA" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0D0915" media="(prefers-color-scheme: dark)">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -65,14 +65,14 @@
     </section>
 
     <div class="row" id="goRow">
-      <button class="btn go" id="goBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4z"/></svg><span id="goLabel">Nettoyer</span><span class="kbd" id="goKbd">⌘↵</span></button>
+      <button class="btn go" id="goBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4z"/></svg><span id="goLabel">Peaufiner</span><span class="kbd" id="goKbd">⌘↵</span></button>
       <button class="btn soft icon" id="clearBtn" aria-label="Tout effacer" title="Tout effacer"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M6 6l1 14h10l1-14"/></svg></button>
     </div>
     <div class="status" id="status" hidden></div>
 
     <section class="card result" id="resultCard">
-      <div class="eyebrow"><span id="outLabel">Texte propre</span>
-        <div class="seg" role="tablist" id="segWrap"><button role="tab" aria-selected="true" id="segClean">Propre</button><button role="tab" aria-selected="false" id="segDiff">Avant / après</button></div>
+      <div class="eyebrow"><span id="outLabel">Texte peaufiné</span>
+        <div class="seg" role="tablist" id="segWrap"><button role="tab" aria-selected="true" id="segClean">Peaufiné</button><button role="tab" aria-selected="false" id="segDiff">Avant / après</button></div>
       </div>
       <textarea id="out" placeholder="Le résultat arrive ici. Tu peux le retoucher, PerfecType apprend de tes corrections." aria-label="Résultat"></textarea>
       <div id="diffBox" hidden>
@@ -130,7 +130,7 @@
       <div class="field">
         <b>Clé Claude</b>
         <input class="input" id="keyClaude" type="password" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
-        <small>Elle met ta dictée au propre. À créer sur <a href="https://platform.claude.com/settings/keys" target="_blank" rel="noopener">platform.claude.com</a>.</small>
+        <small>Elle peaufine ta dictée. À créer sur <a href="https://platform.claude.com/settings/keys" target="_blank" rel="noopener">platform.claude.com</a>.</small>
       </div>
       <div class="set-row"><div><b>Modèle</b><small>Opus soigne le plus, Haiku répond le plus vite</small></div><select class="input" id="modelSel" style="width:auto;max-width:60%"></select></div>
       <div class="row"><button class="btn soft" id="keyTest" style="flex:none">Tester</button><p class="note" id="keyState" style="align-self:center"></p></div>
