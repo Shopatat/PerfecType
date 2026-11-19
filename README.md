@@ -44,7 +44,7 @@ En Dicter, le champ « Tu réponds à… » accueille le message auquel tu répo
 | Fichier | Rôle |
 | --- | --- |
 | `index.html` | La page : onglets Dicter, Activité, Historique, Réglages |
-| `css/style.css` | Le style (bordeaux → fuchsia, clair et sombre) |
+| `css/style.css` | Le style (violet, clair et sombre) |
 | `js/app.js` | Toute l'appli : modes, prompts, apprentissage, historique, activité |
 | `js/ia.js` | Les appels aux IA : Claude (SDK officiel), Whisper chez Groq ou OpenAI, micro, dictée du navigateur |
 | `js/vendor/anthropic.mjs` | Le SDK officiel d'Anthropic (`@anthropic-ai/sdk` 1.10.0) empaqueté pour le navigateur |

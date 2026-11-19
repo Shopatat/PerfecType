@@ -1,28 +1,28 @@
 /* Base : marges nulles, zones sûres de l'iPhone */
 html{-webkit-text-size-adjust:100%}body{margin:0;min-height:100vh;min-height:100dvh}
-/* Layout: appli mobile une colonne (max 560px). Quatre onglets en bas : Dicter, Activité, Historique, Réglages. Sobre, beaucoup d'air, le bordeaux/fuchsia réservé à l'action. */
+/* Layout: appli mobile une colonne (max 560px). Quatre onglets en bas : Dicter, Activité, Historique, Réglages. Sobre, beaucoup d'air, le violet réservé à l'action. */
 :root{
-  --bg:#F8F4F6; --surface:#FFFFFF; --surface2:#F3ECF0; --fg:#1F0E17; --muted:#6E5763; --faint:#A08C96; --line:#EADDE4;
-  --wine:#7B1238; --fuchsia:#D61F69; --brand:#A3164D; --brand-ink:#FFFFFF; --brand-soft:#FBE4EE;
-  --grad:linear-gradient(135deg,#6A0F31 0%,#A3164D 48%,#E0307A 100%);
-  --cut:#B4233F; --cut-bg:#FCE3E8; --add:#7B1238; --add-bg:#F7DDE9; --ok:#1F8A5B;
-  --shadow:0 1px 2px rgba(31,14,23,.05),0 10px 30px -16px rgba(122,18,56,.28);
+  --bg:#F7F4FA; --surface:#FFFFFF; --surface2:#F0EBF6; --fg:#1A1023; --muted:#65587A; --faint:#9A8FAA; --line:#E4DCEE;
+  --wine:#4C1487; --fuchsia:#9A30D6; --brand:#7422B8; --brand-ink:#FFFFFF; --brand-soft:#EFE3FA;
+  --grad:linear-gradient(135deg,#4C1487 0%,#7422B8 48%,#C043E6 100%);
+  --cut:#B4233F; --cut-bg:#FCE3E8; --add:#5B1A9E; --add-bg:#EBDDF8; --ok:#1F8A5B;
+  --shadow:0 1px 2px rgba(26,16,35,.05),0 10px 30px -16px rgba(76,20,135,.28);
   --display:"Manrope",system-ui,-apple-system,sans-serif;
   --body:"Inter",system-ui,-apple-system,"Segoe UI",sans-serif;
   --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
   --tabh:64px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#110810; --surface:#1B0E17; --surface2:#25131F; --fg:#F6E9EF; --muted:#BFA2B0; --faint:#806373; --line:#33202B;
-  --wine:#C23A6B; --fuchsia:#FF4F93; --brand:#F0468A; --brand-ink:#22040F; --brand-soft:#3A1428;
-  --grad:linear-gradient(135deg,#8E1A45 0%,#C8296A 50%,#FF5C9C 100%);
-  --cut:#FF8AA0; --cut-bg:#3D1621; --add:#FF8DBA; --add-bg:#3A1428; --ok:#4FD08F;
+  --bg:#0D0915; --surface:#17111F; --surface2:#211829; --fg:#F1EAF7; --muted:#B3A4C4; --faint:#776A88; --line:#2D2338;
+  --wine:#9B5BD6; --fuchsia:#B86BF0; --brand:#B46CF0; --brand-ink:#16062A; --brand-soft:#2C1840;
+  --grad:linear-gradient(135deg,#43166C 0%,#7E2BA6 50%,#C043E6 100%);
+  --cut:#FF8AA0; --cut-bg:#3D1621; --add:#CDA0F5; --add-bg:#2C1840; --ok:#4FD08F;
   --shadow:0 1px 2px rgba(0,0,0,.35),0 12px 32px -16px rgba(0,0,0,.7); color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#110810; --surface:#1B0E17; --surface2:#25131F; --fg:#F6E9EF; --muted:#BFA2B0; --faint:#806373; --line:#33202B;
-  --wine:#C23A6B; --fuchsia:#FF4F93; --brand:#F0468A; --brand-ink:#22040F; --brand-soft:#3A1428;
-  --grad:linear-gradient(135deg,#8E1A45 0%,#C8296A 50%,#FF5C9C 100%);
-  --cut:#FF8AA0; --cut-bg:#3D1621; --add:#FF8DBA; --add-bg:#3A1428; --ok:#4FD08F;
+  --bg:#0D0915; --surface:#17111F; --surface2:#211829; --fg:#F1EAF7; --muted:#B3A4C4; --faint:#776A88; --line:#2D2338;
+  --wine:#9B5BD6; --fuchsia:#B86BF0; --brand:#B46CF0; --brand-ink:#16062A; --brand-soft:#2C1840;
+  --grad:linear-gradient(135deg,#43166C 0%,#7E2BA6 50%,#C043E6 100%);
+  --cut:#FF8AA0; --cut-bg:#3D1621; --add:#CDA0F5; --add-bg:#2C1840; --ok:#4FD08F;
   --shadow:0 1px 2px rgba(0,0,0,.35),0 12px 32px -16px rgba(0,0,0,.7); color-scheme:dark}
 
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
