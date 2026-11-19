@@ -1,5 +1,8 @@
 # Avancement
 
+## 19/11/2026 — v6
+- Le violet monte maintenant jusqu'en haut, autour de la Dynamic Island (barre d'état « black-translucent »). Au repos, une bande bordeaux → fuchsia derrière l'heure et le réseau (blancs) ; en sombre, la couleur du fond. Il faut réinstaller l'appli sur l'écran d'accueil pour que l'iPhone prenne ce réglage.
+
 ## 19/11/2026 — v5
 - Écoute plein écran (idée de Fabien) : au départ, une vague violette part du micro et couvre tout l'écran ; pendant l'enregistrement, gros chrono, barres de niveau, état de la sauvegarde ; un appui n'importe où arrête, et la vague se rétracte vers le micro. Animation en `transform` seulement (fluide), barre d'état de l'iPhone passée en violet, version simple si « réduire les animations » est activé.
 

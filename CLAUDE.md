@@ -15,5 +15,6 @@
   - Recherche derrière ces choix : doc « Comment Typeless réécrit ta dictée » (18/11/2026).
 - Version affichée dans Réglages : `VERSION_APP` en haut de `js/app.js`, à monter avec `VERSION` de `sw.js`.
 - Pendant l'enregistrement : voile violet plein écran (`#veil`, disque centré sur le micro qui passe de scale(0) à scale(1), retour à l'arrêt). Un appui n'importe où arrête. Demandé par Fabien le 19/11, à garder.
+- Barre d'état iPhone en `black-translucent` : l'appli passe sous l'encoche (heure et réseau en blanc). `.topband` (dégradé de l'appli, ou le fond en sombre) garde l'heure lisible ; le haut de `.app` et du voile tient compte de `safe-area-inset-top`.
 - Thème bordeaux → fuchsia (dégradé), sobre façon Typeless. Ne pas changer sans demander.
 - Pistes pas faites : clavier iOS maison (vraie dictée dans toutes les applis, demande une appli native), raccourci global sur Mac, synchro entre appareils.
