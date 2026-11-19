@@ -1,4 +1,4 @@
-const VERSION_APP = "6 · 19/11/2026";
+const VERSION_APP = "7 · 19/11/2026";
 import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT } from "./ia.js";
 
 (() => {
@@ -591,25 +591,44 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     const o = $("orb").getBoundingClientRect(), cx = o.left + o.width / 2, cy = o.top + o.height / 2;
     const w = innerWidth, h = innerHeight;
     const R = Math.ceil(Math.max(Math.hypot(cx, cy), Math.hypot(w - cx, cy), Math.hypot(cx, h - cy), Math.hypot(w - cx, h - cy))) + 4;
-    Object.assign($("veilBg").style, { width: R * 2 + "px", height: R * 2 + "px", left: cx - R + "px", top: cy - R + "px" });
+    return R;
   }
-  const themeMeta = [...document.querySelectorAll('meta[name="theme-color"]')], themeAvant = themeMeta.map(m => m.content);
+  const reduit = () => matchMedia("(prefers-reduced-motion: reduce)").matches;
+  let veilAnim = null;
+  function geomVeil(){
+    placerVeil();
+    const o = $("orb").getBoundingClientRect(), cx = o.left + o.width / 2, cy = o.top + o.height / 2;
+    const R = Math.max(Math.hypot(cx, cy), Math.hypot(innerWidth - cx, cy), Math.hypot(cx, innerHeight - cy), Math.hypot(innerWidth - cx, innerHeight - cy)) + 8;
+    Object.assign($("veilBg").style, { width: "240px", height: "240px", left: cx - 120 + "px", top: cy - 120 + "px" });
+    $("veilFill").style.setProperty("--cx", cx + "px"); $("veilFill").style.setProperty("--cy", cy + "px");
+    return R / 120;
+  }
   function ouvrirVeil(){
     const v = $("veil"); clearTimeout(veilFin);
     if (!v.hidden && v.classList.contains("open")) return;
-    placerVeil(); v.classList.remove("closing"); v.hidden = false;
-    void v.offsetWidth;            // force le point de départ (disque à 0) avant d'animer
-    v.classList.add("open");
-    themeMeta.forEach(m => m.content = "#5E1B9E");
+    const k = geomVeil(); v.classList.remove("closing"); v.hidden = false;
+    if (veilAnim) veilAnim.cancel();
+    const bg = $("veilBg"), fill = $("veilFill");
+    fill.getAnimations().forEach(a => a.cancel()); fill.style.opacity = 0;
+    veilAnim = bg.animate([{ transform: "translate3d(0,0,0) scale(.001)" }, { transform: `translate3d(0,0,0) scale(${k})` }],
+      { duration: reduit() ? 1 : 620, easing: "cubic-bezier(.22,.8,.24,1)", fill: "forwards" });
+    veilAnim.onfinish = () => { fill.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, easing: "ease-out", fill: "forwards" }); };
+    requestAnimationFrame(() => v.classList.add("open"));
   }
   function fermerVeil(){
     const v = $("veil"); if (v.hidden) return;
-    placerVeil(); v.classList.add("closing"); v.classList.remove("open");
-    themeMeta.forEach((m, k) => m.content = themeAvant[k]);
-    clearTimeout(veilFin); veilFin = setTimeout(() => { v.hidden = true; v.classList.remove("closing"); }, 520);
+    const k = geomVeil(); v.classList.add("closing"); v.classList.remove("open");
+    const bg = $("veilBg"), fill = $("veilFill");
+    if (veilAnim) veilAnim.cancel();
+    fill.getAnimations().forEach(a => a.cancel());
+    const f = fill.animate([{ opacity: getComputedStyle(fill).opacity }, { opacity: 0 }], { duration: 120, fill: "forwards" });
+    veilAnim = bg.animate([{ transform: `translate3d(0,0,0) scale(${k})` }, { transform: "translate3d(0,0,0) scale(.001)" }],
+      { duration: reduit() ? 1 : 480, delay: reduit() ? 0 : 60, easing: "cubic-bezier(.6,0,.75,.2)", fill: "forwards" });
+    clearTimeout(veilFin);
+    veilAnim.onfinish = () => { v.hidden = true; v.classList.remove("closing"); f.cancel(); fill.style.opacity = 0; };
   }
   $("veil").addEventListener("click", e => { e.preventDefault(); if (micro.actif() || (navDictee && navDictee.actif())) orbClick(); });
-  addEventListener("resize", () => { if (!$("veil").hidden) placerVeil(); });
+  addEventListener("resize", () => { if (!$("veil").hidden && !$("veil").classList.contains("closing")) { const k = geomVeil(); if (veilAnim) veilAnim.cancel(); $("veilBg").style.transform = `translate3d(0,0,0) scale(${k})`; } });
 
   function orbState(state){
     const on = state === "listening" || state === "busy" || state === "thinking";
@@ -739,6 +758,44 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     proposerRenvoi(sess, "Ta dictée " + (dayKey(h) === dayKey() ? "de " : "du " + h.toLocaleDateString("fr-FR", { day: "numeric", month: "long" }) + " à ") + h.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) + " n'a pas été transcrite. Elle est gardée de côté.");
   }
   $("orb").onclick = orbClick;
+
+  /* ================= Sauvegarde =================
+     Un fichier JSON avec tout ce que l'appli garde sur le téléphone (clés en option). */
+  const CLES_SAUVEES = ["settings", "dico", "apps", "style", "hist", "totals"];
+  $("bkExport").onclick = async () => {
+    const data = {}; CLES_SAUVEES.forEach(k => { const v = S.get(k, null); if (v != null) data[k] = v; });
+    if ($("bkKeys").checked) data.cles = cles;
+    const json = JSON.stringify({ app: "PerfecType", format: 1, date: new Date().toISOString(), version: VERSION_APP, data }, null, 1);
+    const nom = "PerfecType-sauvegarde-" + dayKey() + ".json";
+    const fichier = new File([json], nom, { type: "application/json" });
+    try {
+      if (navigator.canShare && navigator.canShare({ files: [fichier] })) { await navigator.share({ files: [fichier], title: "Sauvegarde PerfecType" }); $("bkState").textContent = "Sauvegarde envoyée. Range-la dans Fichiers ou iCloud."; return; }
+    } catch (e) { if (e && e.name === "AbortError") return; }
+    const a = document.createElement("a"); a.href = URL.createObjectURL(fichier); a.download = nom; document.body.appendChild(a); a.click();
+    setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
+    $("bkState").textContent = "Sauvegarde téléchargée (" + nom + ").";
+  };
+  let restaurer = null, restaurerT = 0;
+  function armerRestauration(d){
+    restaurer = d; clearTimeout(restaurerT);
+    $("bkImport").textContent = d ? "Touche pour tout remplacer" : "Restaurer";
+    if (d) restaurerT = setTimeout(() => armerRestauration(null), 15000);
+  }
+  $("bkImport").onclick = () => {
+    if (!restaurer) { $("bkFile").click(); return; }
+    CLES_SAUVEES.forEach(k => { if (restaurer[k] != null) S.set(k, restaurer[k]); });
+    if (restaurer.cles) S.set("cles", Object.assign({ claude: "", groq: "", openai: "" }, cles, restaurer.cles));
+    S.set("onb", true);
+    $("bkState").textContent = "C'est restauré, l'appli redémarre…"; setTimeout(() => location.reload(), 600);
+  };
+  $("bkFile").onchange = async () => {
+    const f = $("bkFile").files[0]; $("bkFile").value = ""; if (!f) return;
+    let j; try { j = JSON.parse(await f.text()); } catch { $("bkState").textContent = "Ce fichier n'est pas une sauvegarde lisible."; return; }
+    if (!j || j.app !== "PerfecType" || !j.data) { $("bkState").textContent = "Ce fichier n'est pas une sauvegarde PerfecType."; return; }
+    const d = j.data, n = (d.hist || []).length, w = (d.dico || []).length;
+    $("bkState").textContent = "Sauvegarde du " + new Date(j.date).toLocaleDateString("fr-FR") + " : " + w + " mot" + (w > 1 ? "s" : "") + " au dictionnaire, " + n + " texte" + (n > 1 ? "s" : "") + (d.cles ? ", tes clés" : "") + ". Ce qu'il y a sur ce téléphone sera remplacé.";
+    armerRestauration(d);
+  };
 
   /* ================= Clés et modèle ================= */
   function renderCles(){

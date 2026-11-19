@@ -1,5 +1,9 @@
 # Avancement
 
+## 19/11/2026 — v7
+- Sauvegarde dans Réglages : exporter un fichier (réglages, dictionnaire, style, historique, activité, clés en option) et le restaurer. Né de la réinstallation de la v6 qui a effacé les données de Fabien.
+- Vague plus fluide : le disque fait 240 px et il est agrandi par transform (Web Animations), puis un fond plein écran au même dégradé prend le relais en fondu. Plus de changement de theme-color pendant l'animation, lueur seulement sur le fond.
+
 ## 19/11/2026 — v6
 - Le violet monte maintenant jusqu'en haut, autour de la Dynamic Island (barre d'état « black-translucent »). Au repos, une bande bordeaux → fuchsia derrière l'heure et le réseau (blancs) ; en sombre, la couleur du fond. Il faut réinstaller l'appli sur l'écran d'accueil pour que l'iPhone prenne ce réglage.
 

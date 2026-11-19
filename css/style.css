@@ -250,13 +250,14 @@ body.direct .orb{width:112px;height:112px}
 /* ===== Écoute plein écran =====
    Un grand disque violet, centré sur le micro, passe de scale(0) à scale(1) : il couvre tout l'écran.
    transform + opacity uniquement (fluide sur iPhone). À l'arrêt, le même disque se rétracte vers le micro. */
-:root{--veil:radial-gradient(circle at 50% 42%,#B23BE0 0%,#8A2BC9 38%,#5E1B9E 72%,#3E1170 100%)}
 .veil{position:fixed;inset:0;z-index:35;overflow:hidden;color:#fff;cursor:pointer;-webkit-user-select:none;user-select:none;touch-action:manipulation}
-.veil-bg{position:absolute;border-radius:50%;background:radial-gradient(circle,#C043E6 0%,#9A30D6 30%,#7422B8 60%,#4C1487 100%);transform:scale(0);will-change:transform;
-  transition:transform .62s cubic-bezier(.22,.8,.24,1)}
-.veil.open .veil-bg{transform:scale(1)}
-.veil.closing .veil-bg{transition:transform .48s cubic-bezier(.6,0,.75,.2)}
-.veil-bg::after{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(circle,rgba(255,120,200,.35),transparent 55%);animation:veilglow 3.2s ease-in-out infinite}
+/* Le disque est petit (240 px) et agrandi par transform : l'iPhone n'a qu'une petite image à étirer,
+   au lieu d'un disque géant à redessiner (c'est ce qui saccadait en arrivant en haut). Une fois l'écran
+   couvert, un fond plein écran au même dégradé prend le relais en fondu, et la lueur ne vit que là. */
+.veil-bg{position:absolute;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,#C043E6 0%,#9A30D6 28%,#7422B8 62%,#4C1487 100%);
+  transform:translate3d(0,0,0) scale(.001);will-change:transform;-webkit-backface-visibility:hidden;backface-visibility:hidden}
+.veil-fill{position:absolute;inset:0;opacity:0;will-change:opacity;background:radial-gradient(circle farthest-corner at var(--cx,50%) var(--cy,62%),#C043E6 0%,#9A30D6 28%,#7422B8 62%,#4C1487 100%)}
+.veil-fill::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at var(--cx,50%) var(--cy,62%),rgba(255,120,200,.32),transparent 45%);animation:veilglow 3.2s ease-in-out infinite}
 @keyframes veilglow{0%,100%{opacity:.55}50%{opacity:1}}
 .veil-in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(24px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px));
   opacity:0;transform:translateY(10px) scale(.98);transition:opacity .25s ease,transform .35s ease}
@@ -272,10 +273,16 @@ body.direct .orb{width:112px;height:112px}
 .veil-label{font-family:var(--display);font-weight:700;font-size:1.1rem}
 .veil-sub{font-size:.9rem;opacity:.85;text-align:center;max-width:320px;min-height:1.4em}
 .veil-hint{position:absolute;left:0;right:0;bottom:calc(28px + env(safe-area-inset-bottom,0px));text-align:center;font-family:var(--mono);font-size:.72rem;letter-spacing:.09em;text-transform:uppercase;opacity:.75}
-@media (prefers-reduced-motion:reduce){.veil-bg{transition:none!important}.veil.open .veil-bg{transform:scale(1)}.veil-in{transition:opacity .2s!important}}
+@media (prefers-reduced-motion:reduce){.veil-in{transition:opacity .2s!important}}
 
 /* Barre d'état de l'iPhone : l'appli passe dessous (black-translucent), donc l'heure et le réseau sont en blanc.
    Une bande aux couleurs de l'appli les garde lisibles ; le voile violet la recouvre pendant l'écoute. */
 .topband{position:fixed;top:0;left:0;right:0;height:env(safe-area-inset-top,0px);background:var(--grad);z-index:30;pointer-events:none}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]) .topband{background:var(--bg)}}
 :root[data-theme="dark"] .topband{background:var(--bg)}
+
+/* Sauvegarde */
+.backup-row{display:flex;gap:8px;flex-wrap:wrap}
+.backup-row .btn{flex:1 1 140px;padding:12px 14px}
+.check{display:flex;gap:10px;align-items:center;font-size:.9rem}
+.check input{width:20px;height:20px;accent-color:var(--brand)}

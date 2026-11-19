@@ -192,6 +192,17 @@
       </ul>
     </section>
 
+    <section class="card" id="backupCard">
+      <div><h2>Sauvegarde</h2><p class="note">Garde une copie de tes réglages, ton dictionnaire, ton style appris et ton historique dans un fichier (Fichiers, iCloud, AirDrop…). Si un jour tu réinstalles l'appli ou changes de téléphone, tu récupères tout en un geste.</p></div>
+      <label class="check"><input type="checkbox" id="bkKeys" checked> Inclure mes clés Claude et Groq (garde alors le fichier pour toi)</label>
+      <div class="backup-row">
+        <button class="btn dark" id="bkExport">Exporter une sauvegarde</button>
+        <button class="btn soft" id="bkImport">Restaurer</button>
+      </div>
+      <input type="file" id="bkFile" accept="application/json,.json" hidden>
+      <p class="note" id="bkState"></p>
+    </section>
+
     <section class="card">
       <h2>Données</h2>
       <p class="note">Tout reste dans ce navigateur. Ta voix part seulement chez le service de transcription choisi, et le texte chez Claude, avec tes clés. Rien d'autre n'est envoyé.</p>
@@ -213,6 +224,7 @@
 <!-- Écoute plein écran : la vague part du micro et couvre tout ; un appui n'importe où arrête. -->
 <div class="veil" id="veil" hidden role="button" aria-label="Arrêter l'enregistrement">
   <div class="veil-bg" id="veilBg"></div>
+  <div class="veil-fill" id="veilFill"></div>
   <div class="veil-in">
     <div class="veil-orb" aria-hidden="true"><span class="r"></span><span class="r"></span><span class="r"></span>
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0M12 17.5V21"/></svg>
