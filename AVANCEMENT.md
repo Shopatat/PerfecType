@@ -1,5 +1,8 @@
 # Avancement
 
+## 19/11/2026 — v12
+- Pendant le travail, le message change : un verbe tiré au hasard (Je cisèle…, Je polis…, J'éclaircis…, Je fais briller…) qui se renouvelle toutes les 2 s en fondu. Pareil pendant la transcription (Je déchiffre…, Je mets en mots…). Idée de Fabien.
+
 ## 19/11/2026 — v11
 - « Propre » devient « peaufiné » dans l'interface (Texte peaufiné, bouton Peaufiner, « Je peaufine… »), à la demande de Fabien : le texte n'est pas forcément raccourci, il peut aussi être développé.
 

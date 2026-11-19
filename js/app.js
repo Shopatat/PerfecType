@@ -1,4 +1,4 @@
-const VERSION_APP = "11 · 19/11/2026";
+const VERSION_APP = "12 · 19/11/2026";
 import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT } from "./ia.js";
 
 (() => {
@@ -346,7 +346,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     const ctrl = new AbortController(); running = ctrl;
     setStatus(""); setBusy(true, label); $("learn").hidden = true;
     const before = out.value; setSeg(false);
-    if (quiet) orbState("thinking"); else { out.value = ""; out.placeholder = "Ça réfléchit…"; }
+    if (quiet) orbState("thinking"); else { out.value = ""; out.placeholder = motAuHasard(MOTS_ATTENTE.thinking); }
     try {
       const text = await appelClaude({ cle: cles.claude, modele: settings.model, systeme: p.systeme, message: p.message, maxTokens: p.maxTokens, effort: p.effort, signal: ctrl.signal, onText: quiet ? null : t => { out.value = t; } });
       if (before.trim()) { versions.push({ out: before, raw: lastRaw, ai: lastAI }); updateUndo(); }
@@ -629,11 +629,30 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   $("veil").addEventListener("click", e => { e.preventDefault(); if (micro.actif() || (navDictee && navDictee.actif())) orbClick(); });
   addEventListener("resize", () => { if (!$("veil").hidden && !$("veil").classList.contains("closing")) { const k = geomVeil(); if (veilAnim) veilAnim.cancel(); $("veilBg").style.transform = `translate3d(0,0,0) scale(${k})`; } });
 
+  /* Mots d'attente : un verbe tiré au hasard, qui change toutes les 2 s, comme les mots qui défilent quand Claude réfléchit (idée de Fabien, 19/11). */
+  const MOTS_ATTENTE = {
+    thinking: ["Je peaufine…", "Je cisèle…", "Je polis…", "Je fignole…", "Je lisse…", "J'affine…", "Je clarifie…", "J'éclaircis…", "Je démêle…", "Je ponctue…", "J'ajuste…", "Je fais briller…", "Je trouve les mots…", "Je remets dans l'ordre…", "Je soigne les détails…", "Je mets en forme…"],
+    busy: ["Je retranscris…", "Je déchiffre…", "Je mets en mots…", "Je relis ta voix…", "Transcription…"]
+  };
+  let motTimer = null, motDernier = "";
+  function motAuHasard(liste){ let m; do { m = liste[Math.floor(Math.random() * liste.length)]; } while (liste.length > 1 && m === motDernier); return motDernier = m; }
+  function animerMots(state, el){
+    clearInterval(motTimer); motTimer = null;
+    const liste = MOTS_ATTENTE[state]; if (!liste) return false;
+    el.textContent = motAuHasard(liste);
+    motTimer = setInterval(() => {
+      if (reduit()) { el.textContent = motAuHasard(liste); return; }
+      el.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, fill: "forwards" }).onfinish = () => {
+        el.textContent = motAuHasard(liste); el.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, fill: "forwards" });
+      };
+    }, 2200);
+    return true;
+  }
   function orbState(state){
     const on = state === "listening" || state === "busy" || state === "thinking";
     $("orb").classList.toggle("on", on); $("recTag").hidden = state !== "listening";
     $("orb").setAttribute("aria-label", state === "listening" ? "Arrêter" : "Commencer à parler");
-    $("orbLabel").textContent = { listening: "J'écoute…", busy: "Transcription…", thinking: "Je peaufine…", starting: "Ouverture du micro…" }[state] || "Touche pour parler";
+    if (!animerMots(state, $("orbLabel"))) { $("orbLabel").getAnimations().forEach(a => a.cancel()); $("orbLabel").textContent = { listening: "J'écoute…", starting: "Ouverture du micro…" }[state] || "Touche pour parler"; }
     if (state === "listening") { ouvrirVeil(); if (micro.actif()) boucleEcoute(); else { $("veilTime").textContent = ""; $("veilLabel").textContent = "J'écoute…"; $("veilSub").textContent = "Dictée du navigateur"; } }
     else fermerVeil();
     $("orbSub").textContent = state === "listening" ? "Touche quand tu as fini" : state === "busy" || state === "thinking" ? "Touche pour annuler" : "";
