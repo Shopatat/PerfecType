@@ -1,3 +1,4 @@
+const VERSION_APP = "4 · 19/11/2026";
 import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT } from "./ia.js";
 
 (() => {
@@ -552,11 +553,36 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     if (navDictee) return "navigateur";
     return null;
   }
+  /* Pendant l'écoute : barres qui suivent vraiment le micro, chrono, et où en est la sauvegarde. */
+  let ecouteBoucle = 0;
+  const fmtDuree = ms => { const t = Math.floor(ms / 1000); return Math.floor(t / 60) + ":" + String(t % 60).padStart(2, "0"); };
+  function boucleEcoute(){
+    cancelAnimationFrame(ecouteBoucle);
+    const bars = [...document.querySelectorAll(".wave i")];
+    let lisse = 0, dernierTexte = 0, dernierSon = 0;
+    const pas = () => {
+      if (!micro.actif()) { bars.forEach(b => b.style.height = ""); $("stage").classList.remove("live"); return; }
+      $("stage").classList.add("live");
+      const n = micro.niveau(); lisse = Math.max(n, lisse * 0.85);
+      if (n > 0.04) dernierSon = Date.now();
+      bars.forEach((b, k) => { const f = [0.5, 0.8, 1, 0.7, 0.95, 0.6, 0.45][k] || 0.7; b.style.height = Math.round(4 + lisse * 30 * f) + "px"; });
+      const now = Date.now();
+      if (now - dernierTexte > 300 && session) {
+        dernierTexte = now;
+        const segs = Object.values(session.segs), faits = segs.filter(x => x.text != null).length;
+        $("orbLabel").textContent = Date.now() - dernierSon < 2500 ? "J'écoute… " + fmtDuree(micro.duree()) : "J'écoute (je n'entends rien)… " + fmtDuree(micro.duree());
+        $("orbSub").textContent = (session.sauve ? "Tout est sauvegardé sur ton téléphone" : "Sauvegarde dans un instant") + (faits ? " · " + faits + " morceau" + (faits > 1 ? "x" : "") + " déjà transcrit" + (faits > 1 ? "s" : "") : "");
+      }
+      ecouteBoucle = requestAnimationFrame(pas);
+    };
+    ecouteBoucle = requestAnimationFrame(pas);
+  }
   function orbState(state){
     const on = state === "listening" || state === "busy" || state === "thinking";
     $("orb").classList.toggle("on", on); $("recTag").hidden = state !== "listening";
     $("orb").setAttribute("aria-label", state === "listening" ? "Arrêter" : "Commencer à parler");
     $("orbLabel").textContent = { listening: "J'écoute…", busy: "Transcription…", thinking: "Mise au propre…", starting: "Ouverture du micro…" }[state] || "Touche pour parler";
+    if (state === "listening" && micro.actif()) boucleEcoute();
     $("orbSub").textContent = state === "listening" ? "Touche quand tu as fini" : state === "busy" || state === "thinking" ? "Touche pour annuler" : (matchMedia("(pointer:coarse)").matches ? "" : "ou barre d'espace");
   }
   function ajouterDictee(t){
@@ -599,7 +625,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     }
     leaveExample(); setStatus(""); orbState("starting");
     const sess = session = nouvelleSession();
-    try { await micro.demarrer({ morceau: x => planifier(sess, x) }); orbState("listening"); }
+    try { await micro.demarrer({ morceau: x => planifier(sess, x), progres: x => sauverEnCours(sess, x) }); orbState("listening"); }
     catch (e) {
       orbState("idle"); session = null;
       setStatus(e && e.name === "NotAllowedError" ? "Micro refusé. Autorise-le dans les réglages du navigateur, ou utilise le micro du clavier." : "Le micro n'a pas pu démarrer.");
@@ -613,8 +639,13 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   function coffreSauver(sess){
     coffre.ranger({ id: sess.id, date: sess.date, complet: sess.complet, segs: Object.keys(sess.segs).map(Number).sort((a, b) => a - b).map(i => ({ i, blob: sess.segs[i].text == null ? sess.segs[i].blob : null, text: sess.segs[i].text })) });
   }
+  function sauverEnCours(sess, x){
+    const seg = sess.segs[x.i];
+    if (seg && !seg.partiel) return;
+    sess.segs[x.i] = { blob: x.blob, text: null, partiel: true }; sess.sauve = Date.now(); coffreSauver(sess);
+  }
   function planifier(sess, x){
-    sess.segs[x.i] = { blob: x.blob, text: null }; coffreSauver(sess);
+    sess.segs[x.i] = { blob: x.blob, text: null }; sess.sauve = Date.now(); coffreSauver(sess);
     sess.chaine = sess.chaine.then(() => envoyerMorceau(sess, x.i));
   }
   const attendre = ms => new Promise(r => setTimeout(r, ms));
@@ -727,6 +758,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   applyAppearance(); renderApps(); renderTargets(); renderWords(); renderPerso(); renderMode(); renderActivity(); updateMetrics(); go("dicter");
   if (isExample) setSeg(true);
   if (!S.get("onb", false)) { drawOnb(); $("onb").hidden = false; }
+  $("appVersion").textContent = "Version " + VERSION_APP;
   renderCles(); setupDictation(); reprendreCoffre();
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => {});
 })();

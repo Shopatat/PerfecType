@@ -242,3 +242,7 @@ body.direct .orb{width:112px;height:112px}
 .status .retry{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
 .status .retry button{border:0;border-radius:10px;padding:8px 12px;font-weight:600;cursor:pointer;background:var(--cut);color:#fff}
 .status .retry button.ghost{background:transparent;color:var(--cut);border:1px solid var(--cut)}
+/* Écoute en direct : les barres suivent le micro (plus d'animation factice) */
+.stage.live .wave{height:34px;gap:4px}
+.stage.live .wave i{animation:none!important;opacity:1;width:4px;transition:height .08s linear}
+.stage.live .orb-label{font-variant-numeric:tabular-nums}

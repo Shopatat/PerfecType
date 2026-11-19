@@ -106,7 +106,7 @@ export async function transcrire({ fournisseur, cle, blob, langue, vocabulaire, 
    petit morceau (qu'on peut renvoyer), et à la fin il ne reste presque rien à envoyer. */
 export function enregistreur() {
   let rec = null, flux = null, morceaux = [], ctxAudio = null, analyse = null, actif = false;
-  let onMorceau = null, debut = 0, index = 0, veille = null, garde = null, silence = 0;
+  let onMorceau = null, onProgres = null, dernierProgres = 0, departTotal = 0, debut = 0, index = 0, veille = null, garde = null, silence = 0;
   const type = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm", "audio/ogg"].find(t => window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || "";
   const MIN = window.PT_MORCEAU_MIN || 40_000, MAX = window.PT_MORCEAU_MAX || 80_000;
   function niveau() {
@@ -134,9 +134,9 @@ export function enregistreur() {
   return {
     dispo: () => !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder),
     actif: () => actif,
-    async demarrer({ morceau } = {}) {
+    async demarrer({ morceau, progres } = {}) {
       flux = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-      onMorceau = morceau || null; index = 0; actif = true;
+      onMorceau = morceau || null; onProgres = progres || null; index = 0; actif = true; departTotal = Date.now(); dernierProgres = Date.now();
       try {
         ctxAudio = new (window.AudioContext || window.webkitAudioContext)();
         analyse = ctxAudio.createAnalyser(); analyse.fftSize = 256;
@@ -147,12 +147,15 @@ export function enregistreur() {
       document.addEventListener("visibilitychange", veillerSiVisible);
       garde = setInterval(() => {
         if (!actif || !onMorceau) return;
+        // Sauvegarde continue : toutes les 4 s, le morceau en cours (incomplet mais lisible) part au coffre.
+        if (onProgres && Date.now() - dernierProgres > 4000 && morceaux.length) { dernierProgres = Date.now(); onProgres({ i: index, blob: new Blob(morceaux, { type: rec.mimeType || type || "audio/webm" }) }); }
         const t = Date.now() - debut;
         silence = niveau() < 0.05 ? silence + 250 : 0;
         if ((t > MIN && silence >= 500) || t > MAX) couper().then(x => { if (x.blob.size > 1000) onMorceau(x); });
       }, 250);
     },
     niveau,
+    duree: () => actif ? Date.now() - departTotal : 0,
     arreter() {
       if (!rec) return Promise.resolve(null);
       actif = false; clearInterval(garde);

@@ -54,8 +54,7 @@ En Dicter, le champ « Tu réponds à… » accueille le message auquel tu répo
 
 ## Après une modification
 
-Change la valeur de `VERSION` en haut de `sw.js` (par exemple `perfectype-v2`).
-Sans ça, les téléphones qui ont déjà l'appli continuent d'afficher l'ancienne version.
+Change `VERSION` en haut de `sw.js` et `VERSION_APP` en haut de `js/app.js`. Le téléphone prend la nouvelle version dès qu'il a du réseau ; le numéro s'affiche en bas des Réglages.
 
 ## Tester sur l'ordinateur
 

@@ -1,5 +1,10 @@
 # Avancement
 
+## 19/11/2026 — v4
+- Pendant l'écoute : barres qui suivent vraiment le micro, chrono, « J'écoute » ou « je n'entends rien », « Tout est sauvegardé sur ton téléphone » et le nombre de morceaux déjà transcrits.
+- Sauvegarde continue : toutes les 4 s, ce qui a été dit part au coffre du téléphone, même au milieu d'un morceau. Si l'appli est fermée en pleine dictée, la dictée revient avec « Renvoyer ».
+- Numéro de version en bas des Réglages (rubrique Données). Service worker en « réseau d'abord » : la dernière version est prise dès qu'il y a du réseau.
+
 ## 19/11/2026 — v3
 - Fabien perdait ses longues dictées avec « Pas de connexion à Groq ». Maintenant : morceaux d'environ une minute envoyés pendant qu'il parle, 3 essais chacun, dictée gardée sur le téléphone tant qu'elle n'est pas transcrite, bouton « Renvoyer ma dictée » (aussi à la réouverture), écran gardé allumé.
 - Messages d'erreur précis : réseau coupé pendant l'envoi (avec la taille), plus de réseau, délai dépassé, clé refusée, quota atteint (avec le détail de Groq), morceau trop gros.

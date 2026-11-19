@@ -47,7 +47,7 @@
     </section>
 
     <section class="card">
-      <div class="eyebrow"><span id="rawLabel">Ta dictée</span><span class="pill" id="exTag">Exemple</span><span class="pill" id="recTag" hidden>● En direct</span><button class="seg" id="rawToggle" hidden style="border:0;padding:4px 8px;font-size:.72rem;color:var(--muted);cursor:pointer">Voir le brut</button></div>
+      <div class="eyebrow"><span id="rawLabel">Ta dictée</span><span class="pill" id="exTag">Exemple</span><span class="pill" id="recTag" hidden>● Enregistre</span><button class="seg" id="rawToggle" hidden style="border:0;padding:4px 8px;font-size:.72rem;color:var(--muted);cursor:pointer">Voir le brut</button></div>
       <textarea id="raw" aria-label="Ce que tu dis"></textarea>
       <div class="partial" id="partial" hidden></div>
       <div class="stage" id="stage" hidden>
@@ -195,6 +195,7 @@
       <h2>Données</h2>
       <p class="note">Tout reste dans ce navigateur. Ta voix part seulement chez le service de transcription choisi, et le texte chez Claude, avec tes clés. Rien d'autre n'est envoyé.</p>
       <button class="btn soft" id="replayOnb">Revoir la présentation</button>
+      <p class="note" id="appVersion"></p>
       <button class="btn soft" id="wipe" style="color:var(--cut)">Effacer l'historique</button>
     </section>
   </main>
