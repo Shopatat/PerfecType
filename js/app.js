@@ -1,4 +1,4 @@
-const VERSION_APP = "7 · 19/11/2026";
+const VERSION_APP = "8 · 19/11/2026";
 import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT } from "./ia.js";
 
 (() => {

@@ -1,5 +1,8 @@
 # Avancement
 
+## 19/11/2026 — v8
+- Mode sombre pour l'écoute : même violet, plus profond et plus doux (lueur et bouton atténués). Suit le réglage Apparence (Auto / Clair / Sombre).
+
 ## 19/11/2026 — v7
 - Sauvegarde dans Réglages : exporter un fichier (réglages, dictionnaire, style, historique, activité, clés en option) et le restaurer. Né de la réinstallation de la v6 qui a effacé les données de Fabien.
 - Vague plus fluide : le disque fait 240 px et il est agrandi par transform (Web Animations), puis un fond plein écran au même dégradé prend le relais en fondu. Plus de changement de theme-color pendant l'animation, lueur seulement sur le fond.

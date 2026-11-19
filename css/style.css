@@ -250,20 +250,24 @@ body.direct .orb{width:112px;height:112px}
 /* ===== Écoute plein écran =====
    Un grand disque violet, centré sur le micro, passe de scale(0) à scale(1) : il couvre tout l'écran.
    transform + opacity uniquement (fluide sur iPhone). À l'arrêt, le même disque se rétracte vers le micro. */
+/* Couleurs du violet d'écoute : vif en clair, même violet mais plus profond et plus doux en sombre. */
+:root{--v1:#C043E6;--v2:#9A30D6;--v3:#7422B8;--v4:#4C1487;--vglow:rgba(255,120,200,.32);--vorb:rgba(255,255,255,.14)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--v1:#7E2BA6;--v2:#5F1F8C;--v3:#43166C;--v4:#240B40;--vglow:rgba(214,90,190,.16);--vorb:rgba(255,255,255,.09)}}
+:root[data-theme="dark"]{--v1:#7E2BA6;--v2:#5F1F8C;--v3:#43166C;--v4:#240B40;--vglow:rgba(214,90,190,.16);--vorb:rgba(255,255,255,.09)}
 .veil{position:fixed;inset:0;z-index:35;overflow:hidden;color:#fff;cursor:pointer;-webkit-user-select:none;user-select:none;touch-action:manipulation}
 /* Le disque est petit (240 px) et agrandi par transform : l'iPhone n'a qu'une petite image à étirer,
    au lieu d'un disque géant à redessiner (c'est ce qui saccadait en arrivant en haut). Une fois l'écran
    couvert, un fond plein écran au même dégradé prend le relais en fondu, et la lueur ne vit que là. */
-.veil-bg{position:absolute;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,#C043E6 0%,#9A30D6 28%,#7422B8 62%,#4C1487 100%);
+.veil-bg{position:absolute;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,var(--v1) 0%,var(--v2) 28%,var(--v3) 62%,var(--v4) 100%);
   transform:translate3d(0,0,0) scale(.001);will-change:transform;-webkit-backface-visibility:hidden;backface-visibility:hidden}
-.veil-fill{position:absolute;inset:0;opacity:0;will-change:opacity;background:radial-gradient(circle farthest-corner at var(--cx,50%) var(--cy,62%),#C043E6 0%,#9A30D6 28%,#7422B8 62%,#4C1487 100%)}
-.veil-fill::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at var(--cx,50%) var(--cy,62%),rgba(255,120,200,.32),transparent 45%);animation:veilglow 3.2s ease-in-out infinite}
+.veil-fill{position:absolute;inset:0;opacity:0;will-change:opacity;background:radial-gradient(circle farthest-corner at var(--cx,50%) var(--cy,62%),var(--v1) 0%,var(--v2) 28%,var(--v3) 62%,var(--v4) 100%)}
+.veil-fill::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at var(--cx,50%) var(--cy,62%),var(--vglow),transparent 45%);animation:veilglow 3.2s ease-in-out infinite}
 @keyframes veilglow{0%,100%{opacity:.55}50%{opacity:1}}
 .veil-in{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:calc(24px + env(safe-area-inset-top,0px)) 16px calc(24px + env(safe-area-inset-bottom,0px));
   opacity:0;transform:translateY(10px) scale(.98);transition:opacity .25s ease,transform .35s ease}
 .veil.open .veil-in{opacity:1;transform:none;transition-delay:.28s}
 .veil.closing .veil-in{opacity:0;transition-delay:0s;transition-duration:.15s}
-.veil-orb{position:relative;width:132px;height:132px;border-radius:50%;display:grid;place-items:center;background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.35),0 20px 60px -20px rgba(20,0,40,.6);margin-bottom:6px}
+.veil-orb{position:relative;width:132px;height:132px;border-radius:50%;display:grid;place-items:center;background:var(--vorb);box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.35),0 20px 60px -20px rgba(20,0,40,.6);margin-bottom:6px}
 .veil-orb svg{width:46px;height:46px;position:relative;z-index:1}
 .veil-orb .r{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(255,255,255,.55);animation:ring 2.2s ease-out infinite;opacity:0}
 .veil-orb .r:nth-child(2){animation-delay:.73s}.veil-orb .r:nth-child(3){animation-delay:1.46s}
