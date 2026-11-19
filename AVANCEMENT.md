@@ -1,5 +1,8 @@
 # Avancement
 
+## 19/11/2026 — v13
+- « Voir le brut » retiré en écriture directe : on ne voit que le texte final, c'est plus magique (demande de Fabien). Le brut reste en mode classique (Écriture directe désactivée).
+
 ## 19/11/2026 — v12
 - Pendant le travail, le message change : un verbe tiré au hasard (Je cisèle…, Je polis…, J'éclaircis…, Je fais briller…) qui se renouvelle toutes les 2 s en fondu. Pareil pendant la transcription (Je déchiffre…, Je mets en mots…). Idée de Fabien.
 

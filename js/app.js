@@ -1,4 +1,4 @@
-const VERSION_APP = "12 · 19/11/2026";
+const VERSION_APP = "13 · 19/11/2026";
 import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT } from "./ia.js";
 
 (() => {
@@ -64,7 +64,6 @@ import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coff
   };
 
   /* ================= État ================= */
-  let showRaw = false;
   /* Écriture directe (façon Typeless) : on parle, on rappuie, le texte final arrive d'un coup, déjà copié.
      Pas de texte en direct, pas d'aperçu ; la dictée brute reste accessible d'un geste. */
   const isDirect = () => !!(settings.direct && dict && (settings.mode === "dicter" || settings.mode === "traduire"));
@@ -165,8 +164,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     if (m !== "dicter") setSeg(false);
     const d = isDirect();
     document.body.classList.toggle("direct", d);
-    raw.hidden = d && !showRaw; $("goRow").hidden = d && !showRaw;
-    $("rawToggle").hidden = !d; $("rawToggle").textContent = showRaw ? "Masquer" : "Voir le brut";
+    raw.hidden = d; $("goRow").hidden = d; $("rawHead").hidden = d;
     $("rawLabel").textContent = d ? "" : M.raw;
     if (d) { $("segWrap").hidden = true; setSeg(false); }
     renderQuick();
@@ -506,8 +504,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
 
   /* ================= Réglages ================= */
   function bindSwitch(id, key){ const el = $(id); const draw = () => el.setAttribute("aria-checked", String(!!settings[key])); el.onclick = () => { settings[key] = !settings[key]; saveSettings(); draw(); }; draw(); }
-  bindSwitch("swDirect", "direct"); $("swDirect").addEventListener("click", () => { showRaw = false; renderMode(); });
-  $("rawToggle").onclick = () => { showRaw = !showRaw; renderMode(); if (showRaw) raw.focus(); };
+  bindSwitch("swDirect", "direct"); $("swDirect").addEventListener("click", () => renderMode());
   bindSwitch("swAuto", "auto"); bindSwitch("swCopy", "copy"); bindSwitch("swList", "lists"); bindSwitch("swLearn", "learn");
   function applyAppearance(){
     const r = document.documentElement;
