@@ -1,4 +1,4 @@
-import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, MODELES, STT } from "./ia.js";
+import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT } from "./ia.js";
 
 (() => {
   const $ = id => document.getElementById(id);
@@ -590,29 +590,87 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
       return;
     }
     if (micro.actif()) {
-      const blob = await micro.arreter();
-      if (!blob) { orbState("idle"); setStatus("Je n'ai rien entendu. Réessaie en parlant un peu plus longtemps."); return; }
-      const ctrl = new AbortController(); transcribing = ctrl; orbState("busy");
-      try {
-        const lang = settings.lang === "fr" || settings.lang === "en" ? settings.lang : undefined;
-        const t = await transcrire({ fournisseur: settings.stt, cle: cles[settings.stt], blob, langue: lang, vocabulaire: dico.map(d => d.w), signal: ctrl.signal });
-        if (transcribing !== ctrl) return;
-        transcribing = null; orbState("idle");
-        if (!ajouterDictee(t)) { setStatus("Je n'ai rien compris. Réessaie."); return; }
-        if (settings.auto || isDirect()) goAction(isDirect());
-      } catch (e) {
-        if (transcribing === ctrl) transcribing = null;
-        orbState("idle");
-        if (e.code !== "aborted") setStatus(e.message);
-      }
+      const sess = session, dernier = await micro.arreter();
+      if (!dernier && !Object.keys(sess.segs).length) { orbState("idle"); session = null; setStatus("Je n'ai rien entendu. Réessaie en parlant un peu plus longtemps."); return; }
+      if (dernier && dernier.blob) planifier(sess, dernier);
+      sess.complet = true; coffreSauver(sess);
+      await finir(sess);
       return;
     }
     leaveExample(); setStatus(""); orbState("starting");
-    try { await micro.demarrer(); orbState("listening"); }
+    const sess = session = nouvelleSession();
+    try { await micro.demarrer({ morceau: x => planifier(sess, x) }); orbState("listening"); }
     catch (e) {
-      orbState("idle");
+      orbState("idle"); session = null;
       setStatus(e && e.name === "NotAllowedError" ? "Micro refusé. Autorise-le dans les réglages du navigateur, ou utilise le micro du clavier." : "Le micro n'a pas pu démarrer.");
     }
+  }
+
+  /* Une dictée = une session de morceaux. Chaque morceau est rangé dans le coffre dès qu'il existe,
+     envoyé dans l'ordre (3 essais), et retiré du coffre seulement quand toute la dictée est transcrite. */
+  let session = null;
+  const nouvelleSession = () => ({ id: "d" + Date.now(), date: Date.now(), segs: {}, chaine: Promise.resolve(), ctrl: new AbortController(), complet: false });
+  function coffreSauver(sess){
+    coffre.ranger({ id: sess.id, date: sess.date, complet: sess.complet, segs: Object.keys(sess.segs).map(Number).sort((a, b) => a - b).map(i => ({ i, blob: sess.segs[i].text == null ? sess.segs[i].blob : null, text: sess.segs[i].text })) });
+  }
+  function planifier(sess, x){
+    sess.segs[x.i] = { blob: x.blob, text: null }; coffreSauver(sess);
+    sess.chaine = sess.chaine.then(() => envoyerMorceau(sess, x.i));
+  }
+  const attendre = ms => new Promise(r => setTimeout(r, ms));
+  async function envoyerMorceau(sess, i){
+    const seg = sess.segs[i]; if (!seg || seg.text != null || !seg.blob) return;
+    const lang = settings.lang === "fr" || settings.lang === "en" ? settings.lang : undefined;
+    for (let essai = 0; essai < 3; essai++) {
+      if (sess.ctrl.signal.aborted) return;
+      try {
+        seg.text = await transcrire({ fournisseur: settings.stt, cle: cles[settings.stt], blob: seg.blob, langue: lang, vocabulaire: dico.map(d => d.w), signal: sess.ctrl.signal });
+        seg.err = null; coffreSauver(sess); return;
+      } catch (e) {
+        seg.err = e;
+        if (["aborted", "bad_key", "no_key", "no_stt", "too_big"].includes(e.code)) return;
+        await attendre(e.code === "rate_limited" ? 4000 : 1500 * (essai + 1));
+      }
+    }
+  }
+  async function finir(sess){
+    transcribing = sess.ctrl; orbState("busy");
+    await sess.chaine;
+    if (transcribing === sess.ctrl) transcribing = null;
+    if (session === sess) session = null;
+    if (sess.ctrl.signal.aborted) { orbState("idle"); proposerRenvoi(sess, "Dictée mise de côté, rien n'est perdu."); return; }
+    const ordre = Object.keys(sess.segs).map(Number).sort((a, b) => a - b);
+    const rate = ordre.filter(i => sess.segs[i].text == null);
+    if (rate.length) {
+      orbState("idle");
+      const e = sess.segs[rate[0]].err;
+      proposerRenvoi(sess, (e && e.message ? e.message + " " : "") + "Ta dictée est gardée de côté" + (ordre.length > 1 ? " (" + (ordre.length - rate.length) + " morceau" + (ordre.length - rate.length > 1 ? "x" : "") + " sur " + ordre.length + " déjà passés)" : "") + ".");
+      return;
+    }
+    coffre.oublier(sess.id); orbState("idle");
+    const t = ordre.map(i => sess.segs[i].text).filter(Boolean).join(" ");
+    if (!ajouterDictee(t)) { setStatus("Je n'ai rien compris. Réessaie."); return; }
+    if (settings.auto || isDirect()) goAction(isDirect());
+  }
+  function proposerRenvoi(sess, msg){
+    const st = $("status"); st.innerHTML = ""; st.hidden = false;
+    const p = document.createElement("div"); p.textContent = msg; st.appendChild(p);
+    const row = document.createElement("div"); row.className = "retry";
+    const go = document.createElement("button"); go.type = "button"; go.textContent = "Renvoyer ma dictée";
+    go.onclick = async () => { setStatus(""); sess.ctrl = new AbortController(); sess.chaine = Promise.resolve(); Object.keys(sess.segs).forEach(i => { sess.segs[i].err = null; sess.chaine = sess.chaine.then(() => envoyerMorceau(sess, Number(i))); }); await finir(sess); };
+    const no = document.createElement("button"); no.type = "button"; no.className = "ghost"; no.textContent = "Oublier";
+    no.onclick = () => { if (no.dataset.sure !== "1") { no.dataset.sure = "1"; no.textContent = "Sûr ? Touche encore"; return; } coffre.oublier(sess.id); setStatus(""); toast("Dictée oubliée"); };
+    row.append(go, no); st.appendChild(row);
+  }
+  async function reprendreCoffre(){
+    const restes = (await coffre.tous()).filter(d => d.segs && d.segs.some(x => x.text == null && x.blob));
+    if (!restes.length) return;
+    const d = restes.sort((a, b) => b.date - a.date)[0];
+    restes.slice(1).forEach(x => coffre.oublier(x.id));
+    const sess = { id: d.id, date: d.date, segs: {}, chaine: Promise.resolve(), ctrl: new AbortController(), complet: true };
+    d.segs.forEach(x => { sess.segs[x.i] = { blob: x.blob, text: x.text }; });
+    const h = new Date(d.date);
+    proposerRenvoi(sess, "Ta dictée " + (dayKey(h) === dayKey() ? "de " : "du " + h.toLocaleDateString("fr-FR", { day: "numeric", month: "long" }) + " à ") + h.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) + " n'a pas été transcrite. Elle est gardée de côté.");
   }
   $("orb").onclick = orbClick;
 
@@ -669,6 +727,6 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   applyAppearance(); renderApps(); renderTargets(); renderWords(); renderPerso(); renderMode(); renderActivity(); updateMetrics(); go("dicter");
   if (isExample) setSeg(true);
   if (!S.get("onb", false)) { drawOnb(); $("onb").hidden = false; }
-  renderCles(); setupDictation();
+  renderCles(); setupDictation(); reprendreCoffre();
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => {});
 })();

@@ -239,3 +239,6 @@ select.input{appearance:none;-webkit-appearance:none;padding-right:30px;backgrou
 /* Écriture directe : la carte de dictée se résume au gros bouton */
 body.direct .stage{padding-block:18px 8px}
 body.direct .orb{width:112px;height:112px}
+.status .retry{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.status .retry button{border:0;border-radius:10px;padding:8px 12px;font-weight:600;cursor:pointer;background:var(--cut);color:#fff}
+.status .retry button.ghost{background:transparent;color:var(--cut);border:1px solid var(--cut)}

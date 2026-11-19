@@ -31,6 +31,8 @@ Par défaut, l'appli marche comme Typeless (**écriture directe**) : tu touches 
 2. La transcription part chez Claude avec un prompt fixe : règles de nettoyage, destination choisie, dictionnaire, et quelques exemples de tes propres retouches (dictée brute → version que tu as gardée).
 3. Le résultat arrive en direct. Tu peux le retoucher : PerfecType retient ta version comme exemple de style, et te propose d'ajouter les noms propres au dictionnaire.
 
+Longues dictées : l'enregistrement est coupé en morceaux d'environ une minute (de préférence dans un blanc), envoyés pendant que tu parles, avec 3 essais chacun. Chaque morceau est rangé sur le téléphone tant qu'il n'est pas transcrit : si le réseau coupe, ou si l'appli se ferme, un bouton **Renvoyer ma dictée** apparaît (même à la réouverture). L'écran reste allumé pendant la dictée.
+
 Règle n° 1 du prompt : **ne jamais répondre** à ce que tu dictes. Si tu dictes une question, elle ressort comme une question bien écrite.
 Garde-fou : si le résultat a fondu ou gonflé par rapport à ta dictée, un bouton propose de reprendre la dictée brute.
 

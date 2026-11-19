@@ -1,5 +1,10 @@
 # Avancement
 
+## 19/11/2026 — v3
+- Fabien perdait ses longues dictées avec « Pas de connexion à Groq ». Maintenant : morceaux d'environ une minute envoyés pendant qu'il parle, 3 essais chacun, dictée gardée sur le téléphone tant qu'elle n'est pas transcrite, bouton « Renvoyer ma dictée » (aussi à la réouverture), écran gardé allumé.
+- Messages d'erreur précis : réseau coupé pendant l'envoi (avec la taille), plus de réseau, délai dépassé, clé refusée, quota atteint (avec le détail de Groq), morceau trop gros.
+- Testé sur Chromium avec une coupure réseau simulée, Groq en panne, rechargement de la page puis renvoi. Pas encore sur le vrai iPhone.
+
 ## 18/11/2026 — v2
 - Écriture directe façon Typeless, par défaut : on parle, on rappuie, le texte final arrive d'un coup et part dans le presse-papiers. Pas de texte pendant l'enregistrement ni d'aperçu. « Voir le brut » pour la dictée mot pour mot. Interrupteur dans Réglages → Comportement.
 

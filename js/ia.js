@@ -69,6 +69,7 @@ export async function transcrire({ fournisseur, cle, blob, langue, vocabulaire, 
   if (!f || !f.url) throw new IAErreur("no_stt", "Pas de service de transcription choisi.");
   if (!cle) throw new IAErreur("no_key", "Ajoute ta clé " + f.nom + " dans les Réglages.");
   const ext = /mp4|m4a|aac/.test(blob.type) ? "m4a" : /ogg/.test(blob.type) ? "ogg" : /wav/.test(blob.type) ? "wav" : "webm";
+  const mo = blob.size < 1048576 ? Math.max(1, Math.round(blob.size / 1024)) + " Ko" : (blob.size / 1048576).toFixed(1).replace(".", ",") + " Mo";
   const fd = new FormData();
   fd.append("file", blob, "dictee." + ext);
   fd.append("model", f.modele);
@@ -77,66 +78,132 @@ export async function transcrire({ fournisseur, cle, blob, langue, vocabulaire, 
   if (langue) fd.append("language", langue);
   // Le « prompt » de Whisper oriente l'orthographe des noms propres : on y met le dictionnaire.
   if (vocabulaire && vocabulaire.length) fd.append("prompt", vocabulaire.slice(0, 60).join(", "));
+  // Délai max : un morceau fait au plus ~1 min 30 de voix, 90 s suffisent largement même en 4G faible.
+  const ctrl = new AbortController(), minuteur = setTimeout(() => ctrl.abort("timeout"), 90_000);
+  const stop = () => ctrl.abort("user"); if (signal) signal.addEventListener("abort", stop);
   let r;
-  try { r = await fetch(f.url, { method: "POST", headers: { Authorization: "Bearer " + cle }, body: fd, signal }); }
+  try { r = await fetch(f.url, { method: "POST", headers: { Authorization: "Bearer " + cle }, body: fd, signal: ctrl.signal }); }
   catch (e) {
     if (signal && signal.aborted) throw new IAErreur("aborted", "");
-    throw new IAErreur("network", "Pas de connexion à " + f.nom + ".");
-  }
+    if (ctrl.signal.aborted) throw new IAErreur("timeout", f.nom + " n'a pas répondu à temps (envoi de " + mo + ").");
+    if (navigator.onLine === false) throw new IAErreur("offline", "Ton téléphone n'a plus de réseau.");
+    // fetch qui échoue sans réponse : réseau coupé pendant l'envoi, ou refus avant même d'entrer chez le service.
+    throw new IAErreur("network", "L'envoi vers " + f.nom + " a coupé en route (" + mo + ").");
+  } finally { clearTimeout(minuteur); if (signal) signal.removeEventListener("abort", stop); }
+  let detail = "";
+  if (!r.ok) { try { const j = await r.json(); detail = (j.error && j.error.message) || ""; } catch {} }
   if (r.status === 401 || r.status === 403) throw new IAErreur("bad_key", "La clé " + f.nom + " est refusée. Vérifie-la dans les Réglages.");
-  if (r.status === 429) throw new IAErreur("rate_limited", f.nom + " dit : trop de demandes. Réessaie dans un instant.");
-  if (!r.ok) throw new IAErreur("api", f.nom + " a renvoyé une erreur (" + r.status + ").");
+  if (r.status === 413) throw new IAErreur("too_big", "Morceau trop gros pour " + f.nom + " (" + mo + ").");
+  if (r.status === 429) throw new IAErreur("rate_limited", f.nom + " dit : quota atteint pour l'instant. " + (detail ? "(" + detail.slice(0, 140) + ")" : "Réessaie un peu plus tard."));
+  if (!r.ok) throw new IAErreur("api", f.nom + " a renvoyé une erreur " + r.status + (detail ? " : " + detail.slice(0, 140) : "."));
   const j = await r.json();
   return (j.text || "").trim();
 }
 
-/* ===== Enregistreur micro ===== */
+/* ===== Enregistreur micro =====
+   Les longues dictées sont coupées en morceaux d'environ une minute, de préférence dans un silence :
+   chaque morceau part chez le service pendant que tu continues de parler. Un envoi raté ne coûte qu'un
+   petit morceau (qu'on peut renvoyer), et à la fin il ne reste presque rien à envoyer. */
 export function enregistreur() {
-  let rec = null, flux = null, morceaux = [], ctxAudio = null, analyse = null;
+  let rec = null, flux = null, morceaux = [], ctxAudio = null, analyse = null, actif = false;
+  let onMorceau = null, debut = 0, index = 0, veille = null, garde = null, silence = 0;
   const type = ["audio/webm;codecs=opus", "audio/mp4", "audio/webm", "audio/ogg"].find(t => window.MediaRecorder && MediaRecorder.isTypeSupported && MediaRecorder.isTypeSupported(t)) || "";
+  const MIN = window.PT_MORCEAU_MIN || 40_000, MAX = window.PT_MORCEAU_MAX || 80_000;
+  function niveau() {
+    if (!analyse) return 0;
+    const d = new Uint8Array(analyse.frequencyBinCount); analyse.getByteTimeDomainData(d);
+    let m = 0; for (const v of d) m = Math.max(m, Math.abs(v - 128));
+    return Math.min(1, m / 64);
+  }
+  function nouveau() {
+    const m = []; morceaux = m;
+    const opts = { audioBitsPerSecond: 48000 }; if (type) opts.mimeType = type;
+    let r; try { r = new MediaRecorder(flux, opts); } catch { r = new MediaRecorder(flux, type ? { mimeType: type } : undefined); }
+    r.ondataavailable = e => { if (e.data && e.data.size) m.push(e.data); };
+    r.start(1000); rec = r; debut = Date.now(); silence = 0;
+  }
+  // Ferme le morceau en cours ; si on enregistre encore, le suivant démarre avant (léger chevauchement, aucun mot perdu).
+  function couper() {
+    const r = rec, m = morceaux, i = index++;
+    const fini = new Promise(res => { r.onstop = () => res({ i, blob: new Blob(m, { type: r.mimeType || type || "audio/webm" }) }); });
+    if (actif) nouveau();
+    try { r.stop(); } catch {}
+    return fini;
+  }
+  async function veiller() { try { veille = navigator.wakeLock ? await navigator.wakeLock.request("screen") : null; } catch { veille = null; } }
   return {
     dispo: () => !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder),
-    actif: () => !!rec && rec.state === "recording",
-    async demarrer() {
+    actif: () => actif,
+    async demarrer({ morceau } = {}) {
       flux = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
-      morceaux = [];
-      rec = new MediaRecorder(flux, type ? { mimeType: type } : undefined);
-      rec.ondataavailable = e => { if (e.data && e.data.size) morceaux.push(e.data); };
-      rec.start(250);
+      onMorceau = morceau || null; index = 0; actif = true;
       try {
         ctxAudio = new (window.AudioContext || window.webkitAudioContext)();
         analyse = ctxAudio.createAnalyser(); analyse.fftSize = 256;
         ctxAudio.createMediaStreamSource(flux).connect(analyse);
       } catch { analyse = null; }
+      nouveau(); veiller();
+      // L'écran qui se met en veille couperait le micro : on le garde allumé pendant la dictée.
+      document.addEventListener("visibilitychange", veillerSiVisible);
+      garde = setInterval(() => {
+        if (!actif || !onMorceau) return;
+        const t = Date.now() - debut;
+        silence = niveau() < 0.05 ? silence + 250 : 0;
+        if ((t > MIN && silence >= 500) || t > MAX) couper().then(x => { if (x.blob.size > 1000) onMorceau(x); });
+      }, 250);
     },
-    niveau() {
-      if (!analyse) return 0;
-      const d = new Uint8Array(analyse.frequencyBinCount); analyse.getByteTimeDomainData(d);
-      let m = 0; for (const v of d) m = Math.max(m, Math.abs(v - 128));
-      return Math.min(1, m / 64);
-    },
+    niveau,
     arreter() {
-      return new Promise(res => {
-        if (!rec) return res(null);
-        rec.onstop = () => {
-          const blob = new Blob(morceaux, { type: rec.mimeType || type || "audio/webm" });
-          flux.getTracks().forEach(t => t.stop());
-          try { ctxAudio && ctxAudio.close(); } catch {}
-          rec = null; flux = null; analyse = null; ctxAudio = null;
-          res(blob.size > 1000 ? blob : null);
-        };
-        rec.stop();
+      if (!rec) return Promise.resolve(null);
+      actif = false; clearInterval(garde);
+      document.removeEventListener("visibilitychange", veillerSiVisible);
+      return couper().then(x => {
+        flux.getTracks().forEach(t => t.stop());
+        try { ctxAudio && ctxAudio.close(); } catch {}
+        try { veille && veille.release(); } catch {}
+        rec = null; flux = null; analyse = null; ctxAudio = null; veille = null;
+        return x.blob.size > 1000 ? x : (x.i === 0 ? null : { i: x.i, blob: null });
       });
     },
     annuler() {
       if (!rec) return;
+      actif = false; clearInterval(garde);
       rec.onstop = null; try { rec.stop(); } catch {}
       flux && flux.getTracks().forEach(t => t.stop());
       try { ctxAudio && ctxAudio.close(); } catch {}
-      rec = null; flux = null; analyse = null; ctxAudio = null;
+      try { veille && veille.release(); } catch {}
+      rec = null; flux = null; analyse = null; ctxAudio = null; veille = null;
     }
   };
+  function veillerSiVisible() { if (actif && document.visibilityState === "visible") veiller(); }
 }
+
+/* ===== Coffre à dictées (IndexedDB) =====
+   Chaque morceau enregistré y est rangé tant qu'il n'est pas transcrit : si l'envoi rate ou si l'appli
+   se ferme, la dictée n'est pas perdue et on peut la renvoyer plus tard. */
+const DB = "perfectype", STORE = "dictees";
+function ouvrir() {
+  return new Promise((res, rej) => {
+    const q = indexedDB.open(DB, 1);
+    q.onupgradeneeded = () => q.result.createObjectStore(STORE, { keyPath: "id" });
+    q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error);
+  });
+}
+async function tx(mode, fn) {
+  const db = await ouvrir();
+  return new Promise((res, rej) => {
+    const t = db.transaction(STORE, mode), st = t.objectStore(STORE); let out;
+    Promise.resolve(fn(st)).then(v => { out = v; });
+    t.oncomplete = () => { db.close(); res(out); }; t.onerror = () => { db.close(); rej(t.error); };
+  });
+}
+const req = q => new Promise((res, rej) => { q.onsuccess = () => res(q.result); q.onerror = () => rej(q.error); });
+export const coffre = {
+  async ranger(d) { try { await tx("readwrite", st => st.put(d)); } catch {} },
+  async lire(id) { try { return await tx("readonly", st => req(st.get(id))); } catch { return null; } },
+  async tous() { try { return (await tx("readonly", st => req(st.getAll()))) || []; } catch { return []; } },
+  async oublier(id) { try { await tx("readwrite", st => st.delete(id)); } catch {} }
+};
 
 /* ===== Dictée du navigateur (secours, sans clé) ===== */
 export function dicteeNavigateur() {
