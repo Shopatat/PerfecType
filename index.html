@@ -15,7 +15,7 @@
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600&display=swap">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -37,7 +37,6 @@
       <button class="mode" role="tab" data-m="modifier"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>Modifier</button>
       <button class="mode" role="tab" data-m="demander"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18 9l-4.2 1.4L12 15l-1.8-4.6L6 9l4.2-1.4z"/><path d="M19 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg>Demander</button>
     </div>
-    <p class="mode-desc" id="modeDesc"></p>
 
     <div class="scroller" id="ctxScroller"><div class="chips" id="apps"></div></div>
     <div class="scroller" id="langScroller" hidden><div class="chips" id="targets"></div></div>
@@ -48,7 +47,7 @@
     </section>
 
     <section class="card">
-      <div class="eyebrow"><span id="rawLabel">Ta dictée</span><span class="pill" id="exTag">Exemple</span><span class="pill" id="recTag" hidden>● Enregistre</span><button class="seg" id="rawToggle" hidden style="border:0;padding:4px 8px;font-size:.72rem;color:var(--muted);cursor:pointer">Voir le brut</button></div>
+      <div class="eyebrow"><span id="rawLabel">Ta dictée</span><span class="pill" id="recTag" hidden>● Enregistre</span><button class="seg" id="rawToggle" hidden style="border:0;padding:4px 8px;font-size:.72rem;color:var(--muted);cursor:pointer">Voir le brut</button></div>
       <textarea id="raw" aria-label="Ce que tu dis"></textarea>
       <div class="partial" id="partial" hidden></div>
       <div class="stage" id="stage" hidden>
@@ -57,7 +56,7 @@
         </button>
         <div class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
         <div class="orb-label" id="orbLabel">Touche pour parler</div>
-        <div class="orb-sub" id="orbSub">ou barre d'espace</div>
+        <div class="orb-sub" id="orbSub"></div>
       </div>
       <div class="kbd-hint" id="kbdHint">
         <div class="key"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0M12 17.5V21"/></svg></div>

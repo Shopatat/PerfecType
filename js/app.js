@@ -1,4 +1,4 @@
-const VERSION_APP = "9 · 19/11/2026";
+const VERSION_APP = "10 · 19/11/2026";
 import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT } from "./ia.js";
 
 (() => {
@@ -153,7 +153,6 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   function renderMode(){
     const m = settings.mode, M = MODES[m];
     document.querySelectorAll(".mode").forEach(b => b.setAttribute("aria-selected", String(b.dataset.m === m)));
-    $("modeDesc").textContent = M.desc;
     $("goLabel").textContent = M.go; $("outLabel").textContent = M.out; $("rawLabel").textContent = M.raw;
     if (!isExample) raw.placeholder = dict ? M.ph.replace("…", "") + " (touche le micro)" : M.ph;
     $("ctxCard").hidden = m === "traduire";
@@ -168,7 +167,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     document.body.classList.toggle("direct", d);
     raw.hidden = d && !showRaw; $("goRow").hidden = d && !showRaw;
     $("rawToggle").hidden = !d; $("rawToggle").textContent = showRaw ? "Masquer" : "Voir le brut";
-    $("rawLabel").textContent = d ? (m === "traduire" ? "Parle, ça sort traduit" : "Parle, ça s'écrit propre") : M.raw;
+    $("rawLabel").textContent = d ? "" : M.raw;
     if (d) { $("segWrap").hidden = true; setSeg(false); }
     renderQuick();
   }
@@ -238,12 +237,12 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   function leaveExample(){
     if (!isExample) return;
     isExample = false; raw.value = ""; out.value = ""; lastRaw = ""; lastAI = ""; versions = [];
-    $("exTag").hidden = true; updateMetrics(); renderDiff(); updateUndo(); renderMode();
+    updateMetrics(); renderDiff(); updateUndo(); renderMode();
   }
   raw.addEventListener("focus", leaveExample);
   raw.addEventListener("input", () => S.set("draft", raw.value));
   ctx.addEventListener("input", () => S.set("ctx", ctx.value));
-  out.addEventListener("focus", () => { if (isExample) { isExample = false; $("exTag").hidden = true; } });
+  out.addEventListener("focus", () => { if (isExample) isExample = false; });
   out.addEventListener("input", () => { renderDiff(); updateMetrics(); });
   out.addEventListener("blur", () => learnFromEdit());
   $("pasteHelp").onclick = () => { ctx.focus(); toast("Maintiens le doigt dans la zone puis « Coller »"); };
@@ -403,7 +402,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
       b.onclick = async () => {
         if (!out.value.trim()) { setStatus("Lance d'abord une dictée."); return; }
         learnFromEdit();
-        if (isExample) { isExample = false; $("exTag").hidden = true; }
+        if (isExample) isExample = false;
         const res = await runClaude(refinePrompt(out.value, ins), label);
         if (res == null) return;
         out.value = res; lastAI = res; learnedFor = ""; updateMetrics(); addHistory(res, settings.mode, label);
@@ -637,7 +636,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     $("orbLabel").textContent = { listening: "J'écoute…", busy: "Transcription…", thinking: "Mise au propre…", starting: "Ouverture du micro…" }[state] || "Touche pour parler";
     if (state === "listening") { ouvrirVeil(); if (micro.actif()) boucleEcoute(); else { $("veilTime").textContent = ""; $("veilLabel").textContent = "J'écoute…"; $("veilSub").textContent = "Dictée du navigateur"; } }
     else fermerVeil();
-    $("orbSub").textContent = state === "listening" ? "Touche quand tu as fini" : state === "busy" || state === "thinking" ? "Touche pour annuler" : (matchMedia("(pointer:coarse)").matches ? "" : "ou barre d'espace");
+    $("orbSub").textContent = state === "listening" ? "Touche quand tu as fini" : state === "busy" || state === "thinking" ? "Touche pour annuler" : "";
   }
   function ajouterDictee(t){
     t = (t || "").trim(); if (!t) return false;
@@ -845,7 +844,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   /* ================= Démarrage ================= */
   const draft = S.get("draft", S.old("draft", ""));
   ctx.value = S.get("ctx", "");
-  if (draft) { raw.value = draft; $("exTag").hidden = true; }
+  if (draft) raw.value = draft;
   else { raw.value = EX_RAW; out.value = EX_OUT; lastRaw = EX_RAW; isExample = true; settings.mode = "dicter"; }
   applyAppearance(); renderApps(); renderTargets(); renderWords(); renderPerso(); renderMode(); renderActivity(); updateMetrics(); go("dicter");
   if (isExample) setSeg(true);

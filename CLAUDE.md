@@ -21,4 +21,5 @@
 - Sauvegarde (Réglages) : export/import JSON de `settings, dico, apps, style, hist, totals` (+ `cles` en option). **Avant de demander à Fabien de réinstaller l'icône, lui faire exporter une sauvegarde** : supprimer l'icône efface toutes les données.
 - Thème violet (dégradé `#4C1487 → #7422B8 → #C043E6`, le violet de l'écran d'écoute), fonds légèrement lilas, sobre façon Typeless. Remplace le bordeaux → fuchsia le 19/11 (v9), validé par Fabien sur aperçu. Ne pas changer sans demander, et montrer un aperçu clair + sombre avant.
 - Icône « L'onde chromée » : cinq barres en métal poli teinté lilas + deux éclats, sur le dégradé violet (`outils/icones.js`).
+- Épure (demande de Fabien le 19/11, v10) : pas d'annotations superflues, pas de police à chasse fixe ni de majuscules espacées ; titres d'encadrés en `--display`, phrases courtes. Ne pas rajouter d'explications sur des actions évidentes.
 - Pistes pas faites : clavier iOS maison (vraie dictée dans toutes les applis, demande une appli native), raccourci global sur Mac, synchro entre appareils.

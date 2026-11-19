@@ -1,5 +1,8 @@
 # Avancement
 
+## 19/11/2026 — v10
+- Interface épurée : plus de police à chasse fixe ni de petites majuscules espacées, tous les titres d'encadrés dans la police arrondie. Retirés : l'explication sous les modes, le titre au-dessus du micro, la pastille « Exemple », « ou barre d'espace ».
+
 ## 19/11/2026 — v9
 - Tout le fuchsia et le bordeaux deviennent le violet de l'écran d'écoute, en clair et en sombre (boutons, onglets, carte Activité, graphiques, bande du haut). Fonds légèrement lilas au lieu de rosés. Validé par Fabien sur aperçu.
 - Nouvelle icône « L'onde chromée » en violet : barres en métal poli, deux petits éclats. Pour la voir, il faut supprimer et réajouter l'icône : exporter une sauvegarde avant, la restaurer après.
