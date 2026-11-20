@@ -1,7 +1,7 @@
 # Avancement
 
 ## 20/11/2026 — v20
-- Recalage au lancement : en web-app plein écran, iOS calcule parfois mal la hauteur de l'écran au démarrage ou au retour dans l'appli (barre d'onglets ou page un peu trop haut jusqu'au premier défilement). L'appli fait elle-même un défilement de 1 px aller-retour, invisible, avant de s'afficher, puis 0,4 s après, au retour dans l'appli et quand la taille de l'écran change (sauf clavier ouvert ou écoute en cours).
+- Barre d'onglets à sa place dès le lancement : la page ne défile plus, c'est le contenu (`.app`, posé sur tout l'écran) qui défile. iOS en plein écran décalait parfois le défilement de la page au démarrage (barre trop haut jusqu'au premier geste).
 
 ## 20/11/2026 — v19
 - Forme « Auto » par défaut, façon Typeless : Claude devine la mise en forme d'après la dictée (mail, liste, notes, prompt IA, message), applique une consigne glissée n'importe où (« au fait, c'est un mail ») en la retirant, et reste en Naturel (ex-« Partout ») si c'est court ou flou. Les anciens réglages sur « Partout » passent en Auto une fois.
