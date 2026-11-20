@@ -1,4 +1,4 @@
-const VERSION_APP = "19 · 20/11/2026";
+const VERSION_APP = "20 · 20/11/2026";
 import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT, prechargerSDK } from "./ia.js";
 
 (() => {
@@ -901,7 +901,22 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     if (!(force || settings.ouverture) || !isDirect() || !modeDictee() || micro.actif() || session || running || transcribing || !$("onb").hidden) return;
     micCentre();
   }
+  /* Recalage (bug signalé par Fabien le 20/11) : en web-app plein écran, iOS calcule parfois mal la hauteur de l'écran
+     au lancement ou au retour dans l'appli. La barre d'onglets (fixée en bas) ou toute la page reste un peu trop haut
+     jusqu'au premier défilement. On fait ce défilement nous-mêmes : 1 px aller-retour, invisible. */
+  const ios = navigator.standalone === true;
+  function recaler(){
+    if (!ios || document.hidden || micro.actif() || !$("veil").hidden) return;
+    const a = document.activeElement; if (a && /^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)) return; // clavier ouvert : ne pas toucher
+    const d = document.documentElement, y = scrollY;
+    d.style.minHeight = "calc(100% + 2px)"; // de quoi défiler même sur une page courte
+    scrollTo(0, y + 1);
+    requestAnimationFrame(() => { scrollTo(0, y); d.style.minHeight = ""; });
+  }
+  addEventListener("pageshow", () => { recaler(); setTimeout(recaler, 400); });
+  if (window.visualViewport) visualViewport.addEventListener("resize", () => { clearTimeout(recaler.t); recaler.t = setTimeout(recaler, 150); });
   document.addEventListener("visibilitychange", () => {
+    if (!document.hidden) { setTimeout(recaler, 60); setTimeout(recaler, 450); }
     if (document.hidden) { cacheeDepuis = Date.now(); return; }
     if (cacheeDepuis && Date.now() - cacheeDepuis > 120_000) setTimeout(() => ecouteAuto(false), 300);
   });
@@ -999,7 +1014,9 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   if (!S.get("onb", false)) { drawOnb(); $("onb").hidden = false; }
   $("appVersion").textContent = "Version " + VERSION_APP;
   renderCles(); setupDictation(); reprendreCoffre();
+  recaler(); // avant d'afficher : la page apparaît déjà à sa place
   document.documentElement.classList.add("pret");
+  setTimeout(recaler, 400); // iOS met parfois la bonne hauteur un peu après
   setTimeout(prechargerSDK, 800);
   setTimeout(() => ecouteAuto(new URLSearchParams(location.search).has("dicter")), 500);
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => {});
