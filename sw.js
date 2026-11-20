@@ -2,7 +2,7 @@
    Réseau d'abord pour les fichiers de l'appli : dès que le téléphone a du réseau, il prend la dernière version
    (plus besoin de vider quoi que ce soit). Sans réseau, il sert la copie en cache.
    Change VERSION à chaque modification pour rafraîchir la copie hors ligne. */
-const VERSION = "perfectype-v18";
+const VERSION = "perfectype-v19";
 const FICHIERS = [
   "./", "index.html", "css/style.css", "js/app.js", "js/ia.js", "js/vendor/anthropic.mjs",
   "manifest.webmanifest", "icons/icon-180.png", "icons/icon-192.png", "icons/icon-512.png"

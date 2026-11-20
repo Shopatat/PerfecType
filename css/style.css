@@ -313,3 +313,20 @@ body.direct .orb{width:112px;height:112px}
 .backup-row .btn{flex:1 1 140px;padding:12px 14px}
 .check{display:flex;gap:10px;align-items:center;font-size:.9rem}
 .check input{width:20px;height:20px;accent-color:var(--brand)}
+
+/* Réglages : liste de rubriques façon iOS, et sous-pages (clés API, sauvegarde) */
+.navcard{padding:4px 16px;gap:0}
+.navrow{all:unset;box-sizing:border-box;display:flex;align-items:center;gap:12px;width:100%;padding:13px 0;border-bottom:1px solid var(--line);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.navrow:last-child{border-bottom:0}
+.navrow b{flex:1;font-weight:600}
+.navrow:active{opacity:.6}
+.navico{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:linear-gradient(135deg,#4C1487,#7422B8 55%,#C043E6);color:#fff;flex:none}
+.navico svg{width:17px;height:17px}
+.chev{width:16px;height:16px;color:var(--muted);flex:none}
+.retour{all:unset;display:inline-flex;align-items:center;gap:2px;color:var(--brand);font-weight:600;cursor:pointer;padding:4px 0;align-self:flex-start;-webkit-tap-highlight-color:transparent}
+.retour svg{width:20px;height:20px}
+.pagetitre{font-family:var(--display);font-size:1.5rem;letter-spacing:-.02em;margin:0 2px 2px}
+.version{text-align:center}
+#v-compte>.note,#v-donnees>.note{padding:0 6px}
+.set-row>.seg{flex-direction:row;flex:none}
+#appList:empty{display:none}

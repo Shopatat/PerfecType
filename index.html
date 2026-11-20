@@ -26,7 +26,7 @@
       <div class="logo" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></svg></div>
       <h1>PerfecType</h1>
     </div>
-    <button class="perso" id="persoBtn" title="Plus tu l'utilises, plus le texte te ressemble"><span class="ring" id="persoRing"><i></i></span><span id="persoTxt">Perso 0 %</span></button>
+    <button class="perso" id="persoBtn" title="Personnalisation"><span class="ring" id="persoRing"><i></i></span><span id="persoTxt">Perso 0 %</span></button>
   </div>
 
   <!-- ====== DICTER ====== -->
@@ -42,25 +42,25 @@
     <div class="scroller" id="langScroller" hidden><div class="chips" id="targets"></div></div>
 
     <section class="card ctx" id="ctxCard" hidden>
-      <div class="eyebrow"><span id="ctxLabel">Le texte à modifier</span><button class="seg" id="pasteHelp" style="border:0;padding:4px 8px;font-size:.72rem;color:var(--muted);cursor:pointer">Colle-le ici</button></div>
-      <textarea id="ctx" placeholder="Colle le texte sélectionné (mail reçu, paragraphe, message…)" aria-label="Texte sélectionné"></textarea>
+      <div class="eyebrow"><span id="ctxLabel">Texte à modifier</span><button class="seg" id="pasteHelp" style="border:0;padding:4px 8px;font-size:.72rem;color:var(--muted);cursor:pointer">Coller</button></div>
+      <textarea id="ctx" placeholder="Texte à modifier" aria-label="Texte sélectionné"></textarea>
     </section>
 
     <section class="card" id="rawCard">
-      <div class="eyebrow" id="rawHead"><span id="rawLabel">Ta dictée</span><span class="pill" id="recTag" hidden>● Enregistre</span></div>
-      <textarea id="raw" aria-label="Ce que tu dis"></textarea>
+      <div class="eyebrow" id="rawHead"><span id="rawLabel">Dictée</span><span class="pill" id="recTag" hidden>● Enregistre</span></div>
+      <textarea id="raw" aria-label="Dictée"></textarea>
       <div class="partial" id="partial" hidden></div>
       <div class="stage" id="stage" hidden>
         <button class="orb" id="orb" aria-label="Commencer à parler"><span class="r"></span><span class="r"></span><span class="r"></span>
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0M12 17.5V21"/></svg>
         </button>
         <div class="wave" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-        <div class="orb-label" id="orbLabel">Touche pour parler</div>
+        <div class="orb-label" id="orbLabel">Dicter</div>
         <div class="orb-sub" id="orbSub"></div>
       </div>
       <div class="kbd-hint" id="kbdHint">
         <div class="key"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0M12 17.5V21"/></svg></div>
-        <span>Touche la zone, puis <b>le micro du clavier</b> en bas à droite, et parle.</span>
+        <span>Dictée possible avec le micro du clavier.</span>
       </div>
     </section>
 
@@ -74,7 +74,7 @@
       <div class="eyebrow"><span id="outLabel">Texte peaufiné</span>
         <div class="seg" role="tablist" id="segWrap"><button role="tab" aria-selected="true" id="segClean">Peaufiné</button><button role="tab" aria-selected="false" id="segDiff">Avant / après</button></div>
       </div>
-      <textarea id="out" placeholder="Le résultat arrive ici. Tu peux le retoucher, PerfecType apprend de tes corrections." aria-label="Résultat"></textarea>
+      <textarea id="out" placeholder="Résultat" aria-label="Résultat"></textarea>
       <div id="diffBox" hidden>
         <div class="diff" id="diff"></div>
         <div class="legend"><span><i style="background:var(--cut-bg);outline:1px solid var(--cut)"></i>retiré</span><span><i style="background:var(--add-bg);outline:1px solid var(--add)"></i>ajouté ou corrigé</span></div>
@@ -98,7 +98,7 @@
     <div class="hero">
       <small>Temps gagné au total</small>
       <b id="aSaved">0 min</b>
-      <p id="aSavedSub">Par rapport à la frappe sur téléphone (≈ 38 mots/min contre ≈ 140 à l'oral).</p>
+      <p id="aSavedSub">Comparé à la saisie au clavier</p>
     </div>
     <div class="grid2">
       <div class="metric"><b id="aStreak">0</b><span>jours de suite</span></div>
@@ -111,7 +111,7 @@
       <div class="bars7" id="bars7"></div>
     </section>
     <section class="card">
-      <div class="eyebrow"><span>Tes 16 dernières semaines</span></div>
+      <div class="eyebrow"><span>16 dernières semaines</span></div>
       <div class="heat-wrap"><div class="heat" id="heat"></div></div>
       <div class="heat-legend"><span>moins</span><span>plus de mots</span></div>
     </section>
@@ -119,97 +119,107 @@
 
   <!-- ====== HISTORIQUE ====== -->
   <main class="view" id="v-histo" hidden>
-    <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Chercher dans tes textes" autocomplete="off"></label>
+    <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input id="q" type="search" placeholder="Rechercher" autocomplete="off"></label>
     <div id="hlist" class="view"></div>
   </main>
 
   <!-- ====== RÉGLAGES ====== -->
   <main class="view" id="v-reglages" hidden>
-    <section class="card" id="keysCard">
-      <div><h2>Tes IA</h2><p class="note">PerfecType utilise tes propres clés : tu paies seulement ce que tu dictes, quelques centimes par mois. Elles restent dans ce navigateur.</p></div>
-      <div class="field">
-        <b>Clé Claude</b>
-        <input class="input" id="keyClaude" type="password" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
-        <small>Elle peaufine ta dictée. À créer sur <a href="https://platform.claude.com/settings/keys" target="_blank" rel="noopener">platform.claude.com</a>.</small>
-      </div>
-      <div class="set-row"><div><b>Modèle</b><small>Opus soigne le plus, Haiku répond le plus vite</small></div><select class="input" id="modelSel" style="width:auto;max-width:60%"></select></div>
-      <div class="row"><button class="btn soft" id="keyTest" style="flex:none">Tester</button><p class="note" id="keyState" style="align-self:center"></p></div>
-      <div class="eyebrow" style="margin-top:6px"><span>Transcription de ta voix</span></div>
-      <div class="seg" id="sttSeg" style="align-self:flex-start"><button data-v="groq">Groq</button><button data-v="openai">OpenAI</button><button data-v="navigateur">Navigateur</button></div>
-      <div class="field" id="sttKeyRow">
-        <b id="sttKeyLabel">Clé Groq</b>
-        <input class="input" id="keyStt" type="password" autocomplete="off" spellcheck="false">
-        <small>Groq a une offre gratuite et transcrit en moins d'une seconde. <a id="sttLink" href="https://console.groq.com/keys" target="_blank" rel="noopener">Créer une clé</a>.</small>
-      </div>
-      <p class="note">« Navigateur » marche sans clé, mais moins bien, et pas partout sur iPhone. Sans micro, le micro du clavier fait toujours l'affaire.</p>
-    </section>
-
-    <section class="card" id="dicoCard">
-      <div><h2>Dictionnaire</h2><p class="note">Les noms et mots que PerfecType doit toujours bien écrire. Il en ajoute tout seul quand tu corriges un résultat.</p></div>
-      <div class="addrow"><input class="input" id="dicoIn" placeholder="Ajouter un mot ou un nom" autocomplete="off"><button class="btn dark" id="dicoAdd">Ajouter</button></div>
-      <div class="words" id="words"></div>
-    </section>
-
     <section class="card">
-      <div><h2>Style perso</h2><p class="note">Quand tu retouches un résultat avant de le copier, ta version sert d'exemple pour les prochaines. <span id="styleCount"></span></p></div>
-      <div class="set-row"><div><b>Apprendre de mes corrections</b><small>Dictionnaire et style</small></div><button class="switch" role="switch" id="swLearn" aria-label="Apprendre de mes corrections"></button></div>
-      <button class="btn soft" id="styleReset">Oublier mon style</button>
-    </section>
-
-    <section class="card">
-      <div><h2>Applis et tons</h2><p class="note">Chaque destination a son ton. Ajoute les tiennes, par exemple « SMS à ma mère » ou « Réponse client ».</p></div>
-      <div class="list" id="appList"></div>
-      <input class="input" id="apName" placeholder="Nom (ex. Discord)" maxlength="24">
-      <textarea class="input" id="apRule" placeholder="Comment le texte doit sonner"></textarea>
-      <button class="btn soft" id="apAdd">Ajouter cette appli</button>
-    </section>
-
-    <section class="card">
-      <div><h2>Langues</h2><p class="note">Langue de tes textes, et langues cibles pour Traduire (touche pour activer, dans l'ordre où tu les actives).</p></div>
-      <div class="wrapchips" id="langOut"></div>
-      <div class="eyebrow" style="margin-top:4px"><span>Langues de traduction</span></div>
-      <div class="wrapchips" id="langTargets"></div>
-    </section>
-
-    <section class="card">
-      <h2>Comportement</h2>
+      <h2>Général</h2>
       <div>
-        <div class="set-row"><div><b>Écriture directe</b><small>Comme Typeless : tu parles, tu rappuies, le texte final arrive et il est copié</small></div><button class="switch" role="switch" id="swDirect" aria-label="Écriture directe"></button></div>
-        <div class="set-row"><div><b>Lancer dès la fin de la dictée</b><small>Quand tu arrêtes le micro de la page</small></div><button class="switch" role="switch" id="swAuto" aria-label="Lancer dès la fin de la dictée"></button></div>
-        <div class="set-row"><div><b>Copier automatiquement</b><small>Le résultat part dans le presse-papiers</small></div><button class="switch" role="switch" id="swCopy" aria-label="Copier automatiquement"></button></div>
-        <div class="set-row"><div><b>Écouter dès l'ouverture</b><small>Tu ouvres l'appli, ça enregistre tout de suite</small></div><button class="switch" role="switch" id="swOuverture" aria-label="Écouter dès l'ouverture"></button></div>
-        <div class="set-row"><div><b>Mettre en forme les listes</b><small>Quand tu énumères, ça devient une liste</small></div><button class="switch" role="switch" id="swList" aria-label="Mettre en forme les listes"></button></div>
+        <div class="set-row"><div><b>Écriture directe</b><small>Texte final copié dès l'arrêt</small></div><button class="switch" role="switch" id="swDirect" aria-label="Écriture directe"></button></div>
+        <div class="set-row"><div><b>Lancer à la fin de la dictée</b></div><button class="switch" role="switch" id="swAuto" aria-label="Lancer à la fin de la dictée"></button></div>
+        <div class="set-row"><div><b>Copie automatique</b></div><button class="switch" role="switch" id="swCopy" aria-label="Copie automatique"></button></div>
+        <div class="set-row"><div><b>Écouter à l'ouverture</b></div><button class="switch" role="switch" id="swOuverture" aria-label="Écouter à l'ouverture"></button></div>
+        <div class="set-row"><div><b>Listes automatiques</b></div><button class="switch" role="switch" id="swList" aria-label="Listes automatiques"></button></div>
         <div class="set-row"><div><b>Apparence</b></div><div class="seg" id="appearance"><button data-v="system">Auto</button><button data-v="light">Clair</button><button data-v="dark">Sombre</button></div></div>
       </div>
     </section>
 
-    <section class="card">
-      <h2>Ce que la page ne peut pas faire</h2>
-      <ul class="limits">
-        <li>Dicter directement dans tes autres applis : il faut copier puis coller (un clavier iPhone maison, ce sera l'étape d'après).</li>
-        <li>Deviner l'appli où tu écris : choisis-la dans « Pour ».</li>
-        <li>Chercher sur le web pour répondre.</li>
-      </ul>
+    <section class="card" id="dicoCard">
+      <h2>Dictionnaire</h2>
+      <div class="addrow"><input class="input" id="dicoIn" placeholder="Ajouter un mot" autocomplete="off"><button class="btn dark" id="dicoAdd">Ajouter</button></div>
+      <div class="words" id="words"></div>
     </section>
 
+    <section class="card">
+      <h2>Style</h2>
+      <div>
+        <div class="set-row"><div><b>Apprendre des corrections</b><small id="styleCount"></small></div><button class="switch" role="switch" id="swLearn" aria-label="Apprendre des corrections"></button></div>
+      </div>
+      <button class="btn soft" id="styleReset">Réinitialiser le style</button>
+    </section>
+
+    <section class="card">
+      <h2>Destinations</h2>
+      <div class="list" id="appList"></div>
+      <input class="input" id="apName" placeholder="Nom" maxlength="24">
+      <textarea class="input" id="apRule" placeholder="Ton souhaité"></textarea>
+      <button class="btn soft" id="apAdd">Ajouter</button>
+    </section>
+
+    <section class="card">
+      <h2>Langues</h2>
+      <div class="eyebrow"><span>Écriture</span></div>
+      <div class="wrapchips" id="langOut"></div>
+      <div class="eyebrow" style="margin-top:4px"><span>Traduction</span></div>
+      <div class="wrapchips" id="langTargets"></div>
+    </section>
+
+    <section class="card navcard">
+      <button class="navrow" data-v="compte"><span class="navico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="8" cy="15" r="4"/><path d="M11 12l9-9M17 6l3 3M14 9l2 2"/></svg></span><b>Clés API et modèles</b><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+      <button class="navrow" data-v="donnees"><span class="navico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="12" cy="6" rx="8" ry="3"/><path d="M4 6v6c0 1.7 3.6 3 8 3s8-1.3 8-3V6M4 12v6c0 1.7 3.6 3 8 3s8-1.3 8-3v-6"/></svg></span><b>Sauvegarde et données</b><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+    </section>
+    <p class="note version" id="appVersion"></p>
+  </main>
+
+  <!-- ====== CLÉS API (sous-page des réglages) ====== -->
+  <main class="view" id="v-compte" hidden>
+    <button class="retour" data-v="reglages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Réglages</button>
+    <h2 class="pagetitre">Clés API et modèles</h2>
+    <section class="card" id="keysCard">
+      <h2>Claude</h2>
+      <div class="field">
+        <b>Clé API</b>
+        <input class="input" id="keyClaude" type="password" placeholder="sk-ant-…" autocomplete="off" spellcheck="false">
+        <small><a href="https://platform.claude.com/settings/keys" target="_blank" rel="noopener">Créer une clé</a></small>
+      </div>
+      <div class="set-row"><div><b>Modèle</b></div><select class="input" id="modelSel" style="width:auto;max-width:60%"></select></div>
+      <div class="row"><button class="btn soft" id="keyTest" style="flex:none">Tester</button><p class="note" id="keyState" style="align-self:center"></p></div>
+    </section>
+    <section class="card">
+      <h2>Transcription</h2>
+      <div class="seg" id="sttSeg" style="align-self:flex-start"><button data-v="groq">Groq</button><button data-v="openai">OpenAI</button><button data-v="navigateur">Navigateur</button></div>
+      <div class="field" id="sttKeyRow">
+        <b id="sttKeyLabel">Clé Groq</b>
+        <input class="input" id="keyStt" type="password" autocomplete="off" spellcheck="false">
+        <small><a id="sttLink" href="https://console.groq.com/keys" target="_blank" rel="noopener">Créer une clé</a></small>
+      </div>
+    </section>
+    <p class="note">Les clés restent sur cet appareil.</p>
+  </main>
+
+  <!-- ====== SAUVEGARDE ET DONNÉES (sous-page des réglages) ====== -->
+  <main class="view" id="v-donnees" hidden>
+    <button class="retour" data-v="reglages"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>Réglages</button>
+    <h2 class="pagetitre">Sauvegarde et données</h2>
     <section class="card" id="backupCard">
-      <div><h2>Sauvegarde</h2><p class="note">Garde une copie de tes réglages, ton dictionnaire, ton style appris et ton historique dans un fichier (Fichiers, iCloud, AirDrop…). Si un jour tu réinstalles l'appli ou changes de téléphone, tu récupères tout en un geste.</p></div>
-      <label class="check"><input type="checkbox" id="bkKeys" checked> Inclure mes clés Claude et Groq (garde alors le fichier pour toi)</label>
+      <h2>Sauvegarde</h2>
+      <label class="check"><input type="checkbox" id="bkKeys" checked> Inclure les clés API</label>
       <div class="backup-row">
-        <button class="btn dark" id="bkExport">Exporter une sauvegarde</button>
+        <button class="btn dark" id="bkExport">Exporter</button>
         <button class="btn soft" id="bkImport">Restaurer</button>
       </div>
       <input type="file" id="bkFile" accept="application/json,.json" hidden>
       <p class="note" id="bkState"></p>
     </section>
-
     <section class="card">
       <h2>Données</h2>
-      <p class="note">Tout reste dans ce navigateur. Ta voix part seulement chez le service de transcription choisi, et le texte chez Claude, avec tes clés. Rien d'autre n'est envoyé.</p>
       <button class="btn soft" id="replayOnb">Revoir la présentation</button>
-      <p class="note" id="appVersion"></p>
       <button class="btn soft" id="wipe" style="color:var(--cut)">Effacer l'historique</button>
     </section>
+    <p class="note">Les données restent sur cet appareil. Seuls l'audio et le texte à traiter partent vers les services choisis.</p>
   </main>
 </div>
 

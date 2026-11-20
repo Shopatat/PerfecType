@@ -8,9 +8,9 @@ const chargerSDK = () => Anthropic ? Promise.resolve(Anthropic) : import("./vend
 export const prechargerSDK = () => chargerSDK().catch(() => {});
 
 export const MODELES = {
-  "claude-opus-5-5": "Opus 5.5 (le plus fin)",
-  "claude-sonnet-5-5": "Sonnet 5.5 (équilibré)",
-  "claude-haiku-5-5": "Haiku 5.5 (le plus rapide, le moins cher)"
+  "claude-opus-5-5": "Opus 5.5",
+  "claude-sonnet-5-5": "Sonnet 5.5",
+  "claude-haiku-5-5": "Haiku 5.5"
 };
 
 let client = null, clientKey = "";
@@ -28,9 +28,9 @@ export class IAErreur extends Error {
 
 /* Appelle Claude en streaming. onText reçoit le texte cumulé à chaque morceau. */
 export async function claude({ cle, modele, systeme, message, maxTokens = 4000, effort = "low", signal, onText }) {
-  try { await chargerSDK(); } catch { throw new IAErreur("network", "Pas de connexion à Claude. Vérifie ton réseau."); }
+  try { await chargerSDK(); } catch { throw new IAErreur("network", "Pas de connexion à Claude."); }
   const c = getClient(cle);
-  if (!c) throw new IAErreur("no_key", "Ajoute ta clé Claude dans les Réglages.");
+  if (!c) throw new IAErreur("no_key", "Clé API Claude manquante.");
   const params = {
     model: modele,
     max_tokens: maxTokens,
@@ -51,13 +51,13 @@ export async function claude({ cle, modele, systeme, message, maxTokens = 4000, 
   } catch (e) {
     if (e instanceof IAErreur) throw e;
     if (signal && signal.aborted) throw new IAErreur("aborted", "");
-    if (e instanceof Anthropic.AuthenticationError) throw new IAErreur("bad_key", "La clé Claude est refusée. Vérifie-la dans les Réglages.");
+    if (e instanceof Anthropic.AuthenticationError) throw new IAErreur("bad_key", "Clé API Claude refusée.");
     if (e instanceof Anthropic.PermissionDeniedError) throw new IAErreur("bad_key", "Cette clé Claude n'a pas accès à ce modèle.");
-    if (e instanceof Anthropic.RateLimitError) throw new IAErreur("rate_limited", "Trop de demandes d'un coup. Réessaie dans quelques secondes.");
-    if (e instanceof Anthropic.NotFoundError) throw new IAErreur("model", "Modèle introuvable. Change de modèle dans les Réglages.");
-    if (e instanceof Anthropic.APIConnectionError) throw new IAErreur("network", "Pas de connexion à Claude. Vérifie ton réseau.");
-    if (e instanceof Anthropic.APIError) throw new IAErreur("api", "Claude a renvoyé une erreur (" + (e.status || "?") + "). Réessaie.");
-    throw new IAErreur("unknown", "Ça n'a pas marché. Réessaie.");
+    if (e instanceof Anthropic.RateLimitError) throw new IAErreur("rate_limited", "Trop de demandes. Nouvel essai possible dans quelques secondes.");
+    if (e instanceof Anthropic.NotFoundError) throw new IAErreur("model", "Modèle introuvable.");
+    if (e instanceof Anthropic.APIConnectionError) throw new IAErreur("network", "Pas de connexion à Claude.");
+    if (e instanceof Anthropic.APIError) throw new IAErreur("api", "Claude a renvoyé une erreur (" + (e.status || "?") + ").");
+    throw new IAErreur("unknown", "Une erreur est survenue.");
   }
 }
 
@@ -71,7 +71,7 @@ export const STT = {
 export async function transcrire({ fournisseur, cle, blob, langue, vocabulaire, signal }) {
   const f = STT[fournisseur];
   if (!f || !f.url) throw new IAErreur("no_stt", "Pas de service de transcription choisi.");
-  if (!cle) throw new IAErreur("no_key", "Ajoute ta clé " + f.nom + " dans les Réglages.");
+  if (!cle) throw new IAErreur("no_key", "Clé API " + f.nom + " manquante.");
   const ext = /mp4|m4a|aac/.test(blob.type) ? "m4a" : /ogg/.test(blob.type) ? "ogg" : /wav/.test(blob.type) ? "wav" : "webm";
   const mo = blob.size < 1048576 ? Math.max(1, Math.round(blob.size / 1024)) + " Ko" : (blob.size / 1048576).toFixed(1).replace(".", ",") + " Mo";
   const fd = new FormData();
@@ -90,15 +90,15 @@ export async function transcrire({ fournisseur, cle, blob, langue, vocabulaire, 
   catch (e) {
     if (signal && signal.aborted) throw new IAErreur("aborted", "");
     if (ctrl.signal.aborted) throw new IAErreur("timeout", f.nom + " n'a pas répondu à temps (envoi de " + mo + ").");
-    if (navigator.onLine === false) throw new IAErreur("offline", "Ton téléphone n'a plus de réseau.");
+    if (navigator.onLine === false) throw new IAErreur("offline", "Pas de réseau.");
     // fetch qui échoue sans réponse : réseau coupé pendant l'envoi, ou refus avant même d'entrer chez le service.
     throw new IAErreur("network", "L'envoi vers " + f.nom + " a coupé en route (" + mo + ").");
   } finally { clearTimeout(minuteur); if (signal) signal.removeEventListener("abort", stop); }
   let detail = "";
   if (!r.ok) { try { const j = await r.json(); detail = (j.error && j.error.message) || ""; } catch {} }
-  if (r.status === 401 || r.status === 403) throw new IAErreur("bad_key", "La clé " + f.nom + " est refusée. Vérifie-la dans les Réglages.");
+  if (r.status === 401 || r.status === 403) throw new IAErreur("bad_key", "Clé API " + f.nom + " refusée.");
   if (r.status === 413) throw new IAErreur("too_big", "Morceau trop gros pour " + f.nom + " (" + mo + ").");
-  if (r.status === 429) throw new IAErreur("rate_limited", f.nom + " dit : quota atteint pour l'instant. " + (detail ? "(" + detail.slice(0, 140) + ")" : "Réessaie un peu plus tard."));
+  if (r.status === 429) throw new IAErreur("rate_limited", f.nom + " dit : quota atteint pour l'instant. " + (detail ? "(" + detail.slice(0, 140) + ")" : "Nouvel essai plus tard."));
   if (!r.ok) throw new IAErreur("api", f.nom + " a renvoyé une erreur " + r.status + (detail ? " : " + detail.slice(0, 140) : "."));
   const j = await r.json();
   return (j.text || "").trim();

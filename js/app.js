@@ -1,4 +1,4 @@
-const VERSION_APP = "18 · 20/11/2026";
+const VERSION_APP = "19 · 20/11/2026";
 import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT, prechargerSDK } from "./ia.js";
 
 (() => {
@@ -28,10 +28,10 @@ import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coff
 
   /* ================= Constantes ================= */
   const MODES = {
-    dicter:   { go: "Peaufiner", out: "Texte peaufiné", raw: "Ta dictée", ph: "Parle comme tu parles…", desc: "Tu parles, ça sort peaufiné : sans « euh », sans redites, bien ponctué." },
-    traduire: { go: "Traduire", out: "Traduction", raw: "Ce que tu veux dire", ph: "Dis-le en français, ça sort dans l'autre langue…", desc: "Dis ton message dans ta langue, il sort prêt à envoyer dans une autre." },
-    modifier: { go: "Modifier", out: "Texte modifié", raw: "Ta consigne", ph: "Ex. : rends-le plus court et plus poli", desc: "Colle un texte, dis ce qu'il faut changer, récupère la nouvelle version." },
-    demander: { go: "Demander", out: "Réponse", raw: "Ta question", ph: "Ex. : résume ce mail en trois points", desc: "Pose une question, sur un texte collé ou sur n'importe quoi." }
+    dicter:   { go: "Peaufiner", out: "Texte peaufiné", raw: "Dictée", ph: "Dicter ou écrire…", desc: "Dictée nettoyée : sans hésitations ni redites, bien ponctuée." },
+    traduire: { go: "Traduire", out: "Traduction", raw: "Texte à traduire", ph: "Dicter ou écrire…", desc: "Message traduit, prêt à envoyer." },
+    modifier: { go: "Modifier", out: "Texte modifié", raw: "Consigne", ph: "Ex. : plus court et plus poli", desc: "Texte modifié selon une consigne." },
+    demander: { go: "Demander", out: "Réponse", raw: "Question", ph: "Ex. : résumer en trois points", desc: "Réponse à une question." }
   };
   const APPS = [
     { id: "partout", label: "Partout", rule: "Garde le ton et le vocabulaire de la personne, simplement plus propre et fluide." },
@@ -48,7 +48,7 @@ import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coff
   const QUICK = {
     dicter: [["Plus court", "rends-le nettement plus court et direct."], ["Plus pro", "rends-le plus professionnel et soigné."], ["Plus chaleureux", "rends-le plus chaleureux et sympathique."], ["Plus clair", "rends-le plus clair et mieux structuré."], ["En liste", "transforme-le en liste à puces (tirets)."], ["Emojis", "ajoute quelques emojis pertinents, sans en abuser."]],
     traduire: [["Plus formel", "rends la traduction plus formelle."], ["Plus naturel", "rends la traduction plus naturelle, comme un natif l'écrirait."], ["Plus court", "raccourcis la traduction."]],
-    modifier: [["Plus court", "rends-le plus court."], ["Plus long", "développe-le un peu plus."], ["Corrige les fautes", "corrige seulement l'orthographe et la grammaire."]],
+    modifier: [["Plus court", "rends-le plus court."], ["Plus long", "développe-le un peu plus."], ["Corriger les fautes", "corrige seulement l'orthographe et la grammaire."]],
     demander: [["Plus simple", "explique plus simplement."], ["En 3 points", "résume en trois puces."], ["Plus détaillé", "donne plus de détails."]]
   };
   const EX_RAW = "euh alors du coup je voulais te dire que euh la réunion de demain elle est pas à 10h mais à à 14h non pardon 15h et euh faudrait que tu ramènes le le dossier Martin si tu peux voilà merci";
@@ -87,7 +87,7 @@ import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coff
     const p = persoPct();
     $("persoRing").style.background = `conic-gradient(var(--fuchsia) ${p * 3.6}deg, var(--surface2) 0)`;
     $("persoTxt").textContent = "Perso " + p + " %";
-    $("styleCount").textContent = styleSamples.length ? `${styleSamples.length} exemple${styleSamples.length > 1 ? "s" : ""} enregistré${styleSamples.length > 1 ? "s" : ""}.` : "Aucun exemple pour l'instant.";
+    $("styleCount").textContent = styleSamples.length ? `${styleSamples.length} exemple${styleSamples.length > 1 ? "s" : ""}` : "";
   }
 
   /* ================= Prompts =================
@@ -153,10 +153,10 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     const m = settings.mode, M = MODES[m];
     document.querySelectorAll(".mode").forEach(b => b.setAttribute("aria-selected", String(b.dataset.m === m)));
     $("goLabel").textContent = M.go; $("outLabel").textContent = M.out; $("rawLabel").textContent = M.raw;
-    if (!isExample) raw.placeholder = dict ? M.ph.replace("…", "") + " (touche le micro)" : M.ph;
+    if (!isExample) raw.placeholder = dict ? M.ph : M.ph;
     $("ctxCard").hidden = m === "traduire";
-    $("ctxLabel").textContent = m === "modifier" ? "Le texte à modifier" : m === "dicter" ? "Tu réponds à… (facultatif)" : "Un texte à analyser (facultatif)";
-    ctx.placeholder = m === "dicter" ? "Colle le message auquel tu réponds : le ton et les noms suivront." : "Colle le texte sélectionné (mail reçu, paragraphe, message…)";
+    $("ctxLabel").textContent = m === "modifier" ? "Texte à modifier" : m === "dicter" ? "En réponse à (facultatif)" : "Texte à analyser (facultatif)";
+    ctx.placeholder = m === "dicter" ? "Message reçu" : m === "modifier" ? "Texte à modifier" : "Texte";
     $("ctxScroller").hidden = !(m === "dicter" || m === "traduire");
     $("langScroller").hidden = m !== "traduire";
     $("segWrap").hidden = m !== "dicter";
@@ -196,11 +196,11 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
       x.onclick = () => { customApps = customApps.filter(c => c.id !== a.id); S.set("apps", customApps); if (settings.app === a.id) { settings.app = "partout"; saveSettings(); } renderApps(); };
       r.append(d, x); L.appendChild(r);
     });
-    if (!customApps.length) L.innerHTML = '<p class="note">Pas encore d\'appli perso. Les 8 de base sont toujours là.</p>';
+    if (!customApps.length) L.innerHTML = '';
   }
   $("apAdd").onclick = () => {
     const label = $("apName").value.trim(), rule = $("apRule").value.trim();
-    if (!label || !rule) { toast("Donne un nom et une description"); return; }
+    if (!label || !rule) { toast("Nom et ton requis"); return; }
     const id = "a-" + Date.now().toString(36);
     customApps.push({ id, label, rule }); S.set("apps", customApps); settings.app = id; saveSettings();
     $("apName").value = ""; $("apRule").value = ""; renderApps(); toast("« " + label + " » ajoutée");
@@ -243,7 +243,10 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   out.addEventListener("focus", () => { if (isExample) isExample = false; });
   out.addEventListener("input", () => { renderDiff(); updateMetrics(); });
   out.addEventListener("blur", () => learnFromEdit());
-  $("pasteHelp").onclick = () => { ctx.focus(); toast("Maintiens le doigt dans la zone puis « Coller »"); };
+  $("pasteHelp").onclick = async () => {
+    try { const t = await navigator.clipboard.readText(); if (t) { ctx.value = t; ctx.dispatchEvent(new Event("input")); return; } } catch {}
+    ctx.focus();
+  };
 
   /* ================= Mesures ================= */
   function updateMetrics(){
@@ -319,7 +322,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   }
   function renderWords(){
     const el = $("words"); el.innerHTML = "";
-    if (!dico.length) { el.innerHTML = '<p class="note">Vide pour l\'instant. Ajoute ton nom, tes collègues, tes marques…</p>'; return; }
+    if (!dico.length) { el.innerHTML = '<p class="note">Aucun mot</p>'; return; }
     dico.forEach(d => {
       const s = document.createElement("span"); s.className = "word" + (d.auto ? " auto" : ""); s.title = d.auto ? "Appris automatiquement" : "";
       s.appendChild(document.createTextNode(d.w));
@@ -339,7 +342,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     $("quick").querySelectorAll("button").forEach(b => b.disabled = on);
   }
   async function runClaude(p, label, quiet){
-    if (!cles.claude) { setStatus("Ajoute ta clé Claude dans les Réglages pour commencer."); go("reglages"); setTimeout(() => $("keyClaude").focus(), 80); return null; }
+    if (!cles.claude) { setStatus("Clé API Claude manquante."); go("compte"); setTimeout(() => $("keyClaude").focus(), 80); return null; }
     if (running) running.abort();
     const ctrl = new AbortController(); running = ctrl;
     setStatus(""); setBusy(true, label); $("learn").hidden = true;
@@ -352,20 +355,20 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     } catch (e) {
       out.value = before;
       if (e && e.code === "aborted") return null;
-      setStatus((e && e.message) || "Ça n'a pas marché. Réessaie.");
+      setStatus((e && e.message) || "Une erreur est survenue.");
       return null;
     } finally {
       if (running === ctrl) { running = null; setBusy(false); }
       if (quiet) orbState("idle");
-      out.placeholder = "Le résultat arrive ici. Tu peux le retoucher, PerfecType apprend de tes corrections.";
+      out.placeholder = "Résultat";
     }
   }
 
   async function goAction(direct){
     if (isExample) { leaveExample(); raw.focus(); return; }
     const m = settings.mode, text = raw.value.trim(), context = ctx.value.trim();
-    if (!text) { setStatus(m === "modifier" ? "Dis ou écris ce qu'il faut changer." : m === "demander" ? "Pose ta question d'abord." : "Dicte ou écris quelque chose d'abord."); return; }
-    if (m === "modifier" && !context) { setStatus("Colle d'abord le texte à modifier."); ctx.focus(); return; }
+    if (!text) { setStatus(m === "modifier" ? "Consigne manquante." : m === "demander" ? "Question manquante." : "Aucun texte."); return; }
+    if (m === "modifier" && !context) { setStatus("Texte à modifier manquant."); ctx.focus(); return; }
     const res = await runClaude(buildPrompt(m, text, m === "traduire" ? "" : context), ({ dicter: "Nettoyage", traduire: "Traduction", modifier: "Modification", demander: "Réflexion" })[m], direct === true);
     if (res == null) return;
     out.value = res; lastRaw = text; lastAI = res; learnedFor = "";
@@ -387,7 +390,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     if (a < 12 || (b >= a * 0.45 && b <= a * 2.2)) return;
     const box = $("learn"); box.innerHTML = "";
     const sp = document.createElement("span"); sp.textContent = b < a ? "Le texte a beaucoup raccourci." : "Le texte a beaucoup rallongé.";
-    const bt = document.createElement("button"); bt.type = "button"; bt.textContent = "Reprendre ma dictée brute";
+    const bt = document.createElement("button"); bt.type = "button"; bt.textContent = "Revenir à la dictée";
     bt.onclick = () => { versions.push({ out: out.value, raw: lastRaw, ai: lastAI }); updateUndo(); out.value = text; lastAI = text; box.hidden = true; updateMetrics(); };
     box.append(sp, bt); box.hidden = false;
   }
@@ -398,7 +401,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     (QUICK[settings.mode] || []).forEach(([label, ins]) => {
       const b = document.createElement("button"); b.type = "button"; b.innerHTML = ICON.spark; b.appendChild(document.createTextNode(label));
       b.onclick = async () => {
-        if (!out.value.trim()) { setStatus("Lance d'abord une dictée."); return; }
+        if (!out.value.trim()) { setStatus("Aucun texte."); return; }
         learnFromEdit();
         if (isExample) isExample = false;
         const res = await runClaude(refinePrompt(out.value, ins), label);
@@ -419,11 +422,11 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
 
   /* ================= Copier ================= */
   function copyText(v, silent){
-    const ok = () => { toast("Copié, tu peux coller"); $("copyBtn").classList.add("done"); $("copyLabel").textContent = "Copié !"; setTimeout(() => { $("copyBtn").classList.remove("done"); $("copyLabel").textContent = "Copier"; }, 1600); };
-    const fallback = () => { if (silent) return; setSeg(false); out.focus(); out.select(); out.setSelectionRange(0, v.length); try { if (document.execCommand("copy")) return ok(); } catch {} toast("Texte sélectionné, copie-le à la main"); };
+    const ok = () => { toast("Copié"); $("copyBtn").classList.add("done"); $("copyLabel").textContent = "Copié"; setTimeout(() => { $("copyBtn").classList.remove("done"); $("copyLabel").textContent = "Copier"; }, 1600); };
+    const fallback = () => { if (silent) return; setSeg(false); out.focus(); out.select(); out.setSelectionRange(0, v.length); try { if (document.execCommand("copy")) return ok(); } catch {} toast("Texte sélectionné"); };
     try { navigator.clipboard.writeText(v).then(ok, fallback); } catch { fallback(); }
   }
-  $("copyBtn").onclick = () => { if (!out.value.trim()) { toast("Rien à copier pour l'instant"); return; } learnFromEdit(); copyText(out.value); };
+  $("copyBtn").onclick = () => { if (!out.value.trim()) { toast("Rien à copier"); return; } learnFromEdit(); copyText(out.value); };
 
   /* ================= Historique ================= */
   function addHistory(text, mode, tag){
@@ -442,7 +445,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   function renderHistory(){
     const el = $("hlist"), q = $("q").value.trim().toLowerCase(); el.innerHTML = "";
     const items = hist.filter(h => !q || h.t.toLowerCase().includes(q) || (h.raw || "").toLowerCase().includes(q));
-    if (!items.length) { el.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></svg><b>${q ? "Rien trouvé" : "Pas encore de textes"}</b><span>${q ? "Essaie un autre mot." : "Tout ce que tu dictes atterrit ici, prêt à être recopié."}</span></div>`; return; }
+    if (!items.length) { el.innerHTML = `<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M4 10v4M8 7v10M12 4v16M16 8v8M20 11v2"/></svg><b>${q ? "Rien trouvé" : "Pas encore de textes"}</b><span>${q ? "Aucun résultat pour cette recherche." : "Les textes dictés apparaîtront ici."}</span></div>`; return; }
     const draw = (label, list) => { let cur = null; list.forEach(h => { const g = label || dayLabel(h.d); if (g !== cur) { cur = g; const t = document.createElement("div"); t.className = "hgroup"; t.textContent = g; el.appendChild(t); } el.appendChild(histItem(h)); }); };
     draw("Épinglés", items.filter(h => h.pin)); draw(null, items.filter(h => !h.pin));
   }
@@ -514,7 +517,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   $("appearance").querySelectorAll("button").forEach(b => b.onclick = () => { settings.appearance = b.dataset.v; saveSettings(); applyAppearance(); });
   $("wipe").onclick = () => {
     const b = $("wipe");
-    if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Touche encore pour confirmer"; setTimeout(() => { b.dataset.armed = ""; b.textContent = "Effacer l'historique"; }, 3000); return; }
+    if (b.dataset.armed !== "1") { b.dataset.armed = "1"; b.textContent = "Confirmer l'effacement"; setTimeout(() => { b.dataset.armed = ""; b.textContent = "Effacer l'historique"; }, 3000); return; }
     hist = []; S.set("hist", hist); renderHistory(); b.dataset.armed = ""; b.textContent = "Effacer l'historique"; toast("Historique effacé");
   };
   $("persoBtn").onclick = () => { go("reglages"); };
@@ -522,12 +525,13 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   /* ================= Navigation ================= */
   function go(v){
     const anime = document.documentElement.classList.contains("pret"); // pas de fondu d'entrée au lancement
-    ["dicter", "activite", "histo", "reglages"].forEach(n => { const el = $("v-" + n), on = n === v; el.hidden = !on; if (on && anime) { el.classList.remove("fade"); void el.offsetWidth; el.classList.add("fade"); } });
-    document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.v === v)));
+    ["dicter", "activite", "histo", "reglages", "compte", "donnees"].forEach(n => { const el = $("v-" + n), on = n === v; el.hidden = !on; if (on && anime) { el.classList.remove("fade"); void el.offsetWidth; el.classList.add("fade"); } });
+    const onglet = v === "compte" || v === "donnees" ? "reglages" : v; // sous-pages des réglages
+    document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.v === onglet)));
     if (v === "histo") renderHistory(); if (v === "activite") renderActivity();
     window.scrollTo({ top: 0 });
   }
-  document.querySelectorAll(".tab").forEach(t => t.onclick = () => go(t.dataset.v));
+  document.querySelectorAll(".tab, .navrow, .retour").forEach(t => t.onclick = () => go(t.dataset.v));
 
   /* ================= Clavier ================= */
   const isMac = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
@@ -687,7 +691,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   /* Mots d'attente : un verbe tiré au hasard, qui change toutes les 2 s, comme les mots qui défilent quand Claude réfléchit (idée de Fabien, 19/11). */
   const MOTS_ATTENTE = {
     thinking: ["Je peaufine…", "Je cisèle…", "Je polis…", "Je fignole…", "Je lisse…", "J'affine…", "Je clarifie…", "J'éclaircis…", "Je démêle…", "Je ponctue…", "J'ajuste…", "Je fais briller…", "Je trouve les mots…", "Je remets dans l'ordre…", "Je soigne les détails…", "Je mets en forme…"],
-    busy: ["Je retranscris…", "Je déchiffre…", "Je mets en mots…", "Je relis ta voix…", "Transcription…"]
+    busy: ["Je retranscris…", "Je déchiffre…", "Je mets en mots…", "Je relis…", "Transcription…"]
   };
   let motTimer = null, motDernier = "";
   function motAuHasard(liste){ let m; do { m = liste[Math.floor(Math.random() * liste.length)]; } while (liste.length > 1 && m === motDernier); return motDernier = m; }
@@ -710,7 +714,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     $("micBtn").setAttribute("aria-label", state === "listening" ? "Arrêter" : state === "busy" || state === "thinking" ? "Annuler" : "Dicter");
     $("orb").classList.toggle("on", on); $("recTag").hidden = state !== "listening";
     $("orb").setAttribute("aria-label", state === "listening" ? "Arrêter" : "Commencer à parler");
-    if (!animerMots(state, $("orbLabel"))) { $("orbLabel").getAnimations().forEach(a => a.cancel()); $("orbLabel").textContent = { listening: "J'écoute…", starting: "Ouverture du micro…" }[state] || "Touche pour parler"; }
+    if (!animerMots(state, $("orbLabel"))) { $("orbLabel").getAnimations().forEach(a => a.cancel()); $("orbLabel").textContent = { listening: "J'écoute…", starting: "Ouverture du micro…" }[state] || "Dicter"; }
     if (state === "listening") { ouvrirVeil(); if (micro.actif()) boucleEcoute(); else { $("veilTime").textContent = ""; $("veilLabel").textContent = "J'écoute…"; } }
     else if (state !== "starting") fermerVeil();
     $("orbSub").textContent = "";
@@ -739,7 +743,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
         onFin: (t, err) => {
           if (fini) return; fini = true;
           $("partial").hidden = true; orbState("idle");
-          if (err === "not-allowed" || err === "service-not-allowed") { setStatus("Micro refusé. Le micro du clavier marche aussi."); return; }
+          if (err === "not-allowed" || err === "service-not-allowed") { setStatus("Accès au micro refusé."); return; }
           if (ajouterDictee(t) && (settings.auto || isDirect())) goAction(isDirect());
         }
       });
@@ -750,7 +754,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
       const fin = micro.arreter();
       orbState("busy"); // ferme le violet tout de suite, sans attendre la fin de l'enregistreur
       const dernier = await fin;
-      if (!dernier && !Object.keys(sess.segs).length) { orbState("idle"); session = null; setStatus("Je n'ai rien entendu. Réessaie en parlant un peu plus longtemps."); return; }
+      if (!dernier && !Object.keys(sess.segs).length) { orbState("idle"); session = null; setStatus("Aucune parole détectée."); return; }
       if (dernier && dernier.blob) planifier(sess, dernier);
       sess.complet = true; coffreSauver(sess);
       await finir(sess);
@@ -764,7 +768,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     if (res === true) orbState("listening");
     else {
       orbState("idle"); session = null;
-      setStatus(res && res.name === "NotAllowedError" ? "Micro refusé. Autorise-le dans les réglages du navigateur, ou utilise le micro du clavier." : "Le micro n'a pas pu démarrer.");
+      setStatus(res && res.name === "NotAllowedError" ? "Accès au micro refusé. À autoriser dans les réglages de Safari." : "Le micro n'a pas pu démarrer.");
     }
   }
 
@@ -811,22 +815,22 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     if (rate.length) {
       orbState("idle");
       const e = sess.segs[rate[0]].err;
-      proposerRenvoi(sess, (e && e.message ? e.message + " " : "") + "Ta dictée est gardée de côté" + (ordre.length > 1 ? " (" + (ordre.length - rate.length) + " morceau" + (ordre.length - rate.length > 1 ? "x" : "") + " sur " + ordre.length + " déjà passés)" : "") + ".");
+      proposerRenvoi(sess, (e && e.message ? e.message + " " : "") + "Dictée conservée" + (ordre.length > 1 ? " (" + (ordre.length - rate.length) + " morceau" + (ordre.length - rate.length > 1 ? "x" : "") + " sur " + ordre.length + " déjà passés)" : "") + ".");
       return;
     }
     coffre.oublier(sess.id); orbState("idle");
     const t = ordre.map(i => sess.segs[i].text).filter(Boolean).join(" ");
-    if (!ajouterDictee(t)) { setStatus("Je n'ai rien compris. Réessaie."); return; }
+    if (!ajouterDictee(t)) { setStatus("Transcription vide."); return; }
     if (settings.auto || isDirect()) goAction(isDirect());
   }
   function proposerRenvoi(sess, msg){
     const st = $("status"); st.innerHTML = ""; st.hidden = false;
     const p = document.createElement("div"); p.textContent = msg; st.appendChild(p);
     const row = document.createElement("div"); row.className = "retry";
-    const go = document.createElement("button"); go.type = "button"; go.textContent = "Renvoyer ma dictée";
+    const go = document.createElement("button"); go.type = "button"; go.textContent = "Renvoyer";
     go.onclick = async () => { setStatus(""); sess.ctrl = new AbortController(); sess.chaine = Promise.resolve(); Object.keys(sess.segs).forEach(i => { sess.segs[i].err = null; sess.chaine = sess.chaine.then(() => envoyerMorceau(sess, Number(i))); }); await finir(sess); };
     const no = document.createElement("button"); no.type = "button"; no.className = "ghost"; no.textContent = "Oublier";
-    no.onclick = () => { if (no.dataset.sure !== "1") { no.dataset.sure = "1"; no.textContent = "Sûr ? Touche encore"; return; } coffre.oublier(sess.id); setStatus(""); toast("Dictée oubliée"); };
+    no.onclick = () => { if (no.dataset.sure !== "1") { no.dataset.sure = "1"; no.textContent = "Confirmer"; return; } coffre.oublier(sess.id); setStatus(""); toast("Dictée oubliée"); };
     row.append(go, no); st.appendChild(row);
   }
   async function reprendreCoffre(){
@@ -837,7 +841,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     const sess = { id: d.id, date: d.date, segs: {}, chaine: Promise.resolve(), ctrl: new AbortController(), complet: true };
     d.segs.forEach(x => { sess.segs[x.i] = { blob: x.blob, text: x.text }; });
     const h = new Date(d.date);
-    proposerRenvoi(sess, "Ta dictée " + (dayKey(h) === dayKey() ? "de " : "du " + h.toLocaleDateString("fr-FR", { day: "numeric", month: "long" }) + " à ") + h.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) + " n'a pas été transcrite. Elle est gardée de côté.");
+    proposerRenvoi(sess, "Dictée " + (dayKey(h) === dayKey() ? "de " : "du " + h.toLocaleDateString("fr-FR", { day: "numeric", month: "long" }) + " à ") + h.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) + " n'a pas été transcrite. Elle est gardée de côté.");
   }
   $("orb").onclick = () => micCentre();
   /* Micro du centre (demande de Fabien le 20/11) : depuis n'importe quel onglet, revient sur Texte et lance ou arrête la dictée. */
@@ -890,16 +894,16 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     const nom = "PerfecType-sauvegarde-" + dayKey() + ".json";
     const fichier = new File([json], nom, { type: "application/json" });
     try {
-      if (navigator.canShare && navigator.canShare({ files: [fichier] })) { await navigator.share({ files: [fichier], title: "Sauvegarde PerfecType" }); $("bkState").textContent = "Sauvegarde envoyée. Range-la dans Fichiers ou iCloud."; return; }
+      if (navigator.canShare && navigator.canShare({ files: [fichier] })) { await navigator.share({ files: [fichier], title: "Sauvegarde PerfecType" }); $("bkState").textContent = "Sauvegarde exportée."; return; }
     } catch (e) { if (e && e.name === "AbortError") return; }
     const a = document.createElement("a"); a.href = URL.createObjectURL(fichier); a.download = nom; document.body.appendChild(a); a.click();
     setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
-    $("bkState").textContent = "Sauvegarde téléchargée (" + nom + ").";
+    $("bkState").textContent = "Sauvegarde exportée (" + nom + ").";
   };
   let restaurer = null, restaurerT = 0;
   function armerRestauration(d){
     restaurer = d; clearTimeout(restaurerT);
-    $("bkImport").textContent = d ? "Touche pour tout remplacer" : "Restaurer";
+    $("bkImport").textContent = d ? "Confirmer le remplacement" : "Restaurer";
     if (d) restaurerT = setTimeout(() => armerRestauration(null), 15000);
   }
   $("bkImport").onclick = () => {
@@ -907,14 +911,14 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     CLES_SAUVEES.forEach(k => { if (restaurer[k] != null) S.set(k, restaurer[k]); });
     if (restaurer.cles) S.set("cles", Object.assign({ claude: "", groq: "", openai: "" }, cles, restaurer.cles));
     S.set("onb", true);
-    $("bkState").textContent = "C'est restauré, l'appli redémarre…"; setTimeout(() => location.reload(), 600);
+    $("bkState").textContent = "Restauré. Redémarrage…"; setTimeout(() => location.reload(), 600);
   };
   $("bkFile").onchange = async () => {
     const f = $("bkFile").files[0]; $("bkFile").value = ""; if (!f) return;
-    let j; try { j = JSON.parse(await f.text()); } catch { $("bkState").textContent = "Ce fichier n'est pas une sauvegarde lisible."; return; }
+    let j; try { j = JSON.parse(await f.text()); } catch { $("bkState").textContent = "Fichier illisible."; return; }
     if (!j || j.app !== "PerfecType" || !j.data) { $("bkState").textContent = "Ce fichier n'est pas une sauvegarde PerfecType."; return; }
     const d = j.data, n = (d.hist || []).length, w = (d.dico || []).length;
-    $("bkState").textContent = "Sauvegarde du " + new Date(j.date).toLocaleDateString("fr-FR") + " : " + w + " mot" + (w > 1 ? "s" : "") + " au dictionnaire, " + n + " texte" + (n > 1 ? "s" : "") + (d.cles ? ", tes clés" : "") + ". Ce qu'il y a sur ce téléphone sera remplacé.";
+    $("bkState").textContent = "Sauvegarde du " + new Date(j.date).toLocaleDateString("fr-FR") + " : " + w + " mot" + (w > 1 ? "s" : "") + " au dictionnaire, " + n + " texte" + (n > 1 ? "s" : "") + (d.cles ? ", clés API" : "") + ". Les données actuelles seront remplacées.";
     armerRestauration(d);
   };
 
@@ -926,7 +930,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     $("sttSeg").querySelectorAll("button").forEach(b => b.setAttribute("aria-selected", String(b.dataset.v === settings.stt)));
     const f = settings.stt; $("sttKeyRow").hidden = f === "navigateur";
     if (f !== "navigateur") { $("keyStt").value = cles[f] || ""; $("keyStt").placeholder = f === "groq" ? "gsk_…" : "sk-…"; $("sttKeyLabel").textContent = "Clé " + STT[f].nom; $("sttLink").href = f === "groq" ? "https://console.groq.com/keys" : "https://platform.openai.com/api-keys"; }
-    $("keyState").textContent = cles.claude ? "Clé Claude enregistrée." : "Pas encore de clé Claude.";
+    $("keyState").textContent = cles.claude ? "Clé enregistrée" : "Aucune clé";
   }
   $("keyClaude").addEventListener("change", () => { cles.claude = $("keyClaude").value.trim(); saveCles(); renderCles(); setStatus(""); });
   $("keyStt").addEventListener("change", () => { if (settings.stt !== "navigateur") { cles[settings.stt] = $("keyStt").value.trim(); saveCles(); setupDictation(); } });
@@ -937,7 +941,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     const b = $("keyTest"); b.disabled = true; b.textContent = "Test…";
     try {
       const r = await appelClaude({ cle: cles.claude, modele: settings.model, systeme: systemeDicter(false), message: messageDictee("euh bonjour je teste euh l'appli non pardon PerfecType", ""), maxTokens: 300 });
-      $("keyState").textContent = "Ça marche : « " + r + " »";
+      $("keyState").textContent = "Connexion réussie";
     } catch (e) { $("keyState").textContent = e.message; }
     finally { b.disabled = false; b.textContent = "Tester"; }
   };
