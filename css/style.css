@@ -250,6 +250,8 @@ body.direct.repos #rawCard{display:none}
 .dots i.on{width:18px;background:var(--brand)}
 
 .fade{animation:fade .25s ease}
+/* Lancement (20/11) : la page reste invisible (fond seul) tant que le script ne l'a pas mise en état, pour s'ouvrir d'un coup, stable. */
+html:not(.pret) .app,html:not(.pret) .tabbar{visibility:hidden}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
 
@@ -280,7 +282,7 @@ body.direct .orb{width:112px;height:112px}
 /* Le disque est petit (240 px) et agrandi par transform : l'iPhone n'a qu'une petite image à étirer,
    au lieu d'un disque géant à redessiner (c'est ce qui saccadait en arrivant en haut). Une fois l'écran
    couvert, un fond plein écran au même dégradé prend le relais en fondu, et la lueur ne vit que là. */
-.veil-bg{position:absolute;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle,var(--v1) 0%,var(--v2) 28%,var(--v3) 62%,var(--v4) 100%);
+.veil-bg{position:absolute;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle closest-side,var(--v1) 0%,var(--v2) 28%,var(--v3) 62%,var(--v4) 100%);
   transform:translate3d(0,0,0) scale(.001);will-change:transform;-webkit-backface-visibility:hidden;backface-visibility:hidden}
 .veil-fill{position:absolute;inset:0;opacity:0;will-change:opacity;background:radial-gradient(circle farthest-corner at var(--cx,50%) var(--cy,62%),var(--v1) 0%,var(--v2) 28%,var(--v3) 62%,var(--v4) 100%)}
 .veil-fill::after{content:"";position:absolute;inset:0;background:radial-gradient(circle at var(--cx,50%) var(--cy,62%),var(--vglow),transparent 45%);animation:veilglow 3.2s ease-in-out infinite}

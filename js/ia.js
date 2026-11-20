@@ -2,7 +2,10 @@
    - Claude réécrit le texte (clé Anthropic de l'utilisateur, appel direct depuis le navigateur).
    - La transcription de la voix passe par un service Whisper (Groq ou OpenAI), ou par la dictée du navigateur en secours.
    Les clés restent dans ce navigateur (localStorage) et ne partent que vers le service concerné. */
-import Anthropic from "./vendor/anthropic.mjs";
+// Le SDK est lourd : on ne le charge pas au lancement (l'appli s'ouvre plus vite), mais juste après, en tâche de fond.
+let Anthropic = null;
+const chargerSDK = () => Anthropic ? Promise.resolve(Anthropic) : import("./vendor/anthropic.mjs").then(m => (Anthropic = m.default));
+export const prechargerSDK = () => chargerSDK().catch(() => {});
 
 export const MODELES = {
   "claude-opus-5-5": "Opus 5.5 (le plus fin)",
@@ -25,6 +28,7 @@ export class IAErreur extends Error {
 
 /* Appelle Claude en streaming. onText reçoit le texte cumulé à chaque morceau. */
 export async function claude({ cle, modele, systeme, message, maxTokens = 4000, effort = "low", signal, onText }) {
+  try { await chargerSDK(); } catch { throw new IAErreur("network", "Pas de connexion à Claude. Vérifie ton réseau."); }
   const c = getClient(cle);
   if (!c) throw new IAErreur("no_key", "Ajoute ta clé Claude dans les Réglages.");
   const params = {

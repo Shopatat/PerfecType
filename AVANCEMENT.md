@@ -1,5 +1,9 @@
 # Avancement
 
+## 20/11/2026 — v18
+- Retour sans flash : l'animation de fermeture laissait le disque à zéro pendant son petit délai de départ, la page apparaissait un instant (`fill: "both"`). Le disque a aussi exactement le même dégradé que le fond plein écran (`circle closest-side`), donc plus de saut de couleur.
+- Ouverture stable : la page reste cachée (fond seul) tant que le script ne l'a pas mise en place, plus de fondu d'entrée au lancement, `body` démarre en `direct repos`. Le SDK Claude se charge après le lancement (import dynamique), plus pendant.
+
 ## 20/11/2026 — v17
 - Animation du micro en un seul geste, façon iOS : le micro s'allume dès que le doigt touche le bouton (encore immobile), la vague part pendant que le bouton monte, courbes à ressort (`linear()` calculé d'un vrai ressort amorti, repli cubic-bezier). Au retour, le bouton redescend pendant que le violet se rétracte, avec rebond. Plus de pause au centre.
 

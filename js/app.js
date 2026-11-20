@@ -1,5 +1,5 @@
-const VERSION_APP = "17 · 20/11/2026";
-import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT } from "./ia.js";
+const VERSION_APP = "18 · 20/11/2026";
+import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT, prechargerSDK } from "./ia.js";
 
 (() => {
   const $ = id => document.getElementById(id);
@@ -521,7 +521,8 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
 
   /* ================= Navigation ================= */
   function go(v){
-    ["dicter", "activite", "histo", "reglages"].forEach(n => { const el = $("v-" + n), on = n === v; el.hidden = !on; if (on) { el.classList.remove("fade"); void el.offsetWidth; el.classList.add("fade"); } });
+    const anime = document.documentElement.classList.contains("pret"); // pas de fondu d'entrée au lancement
+    ["dicter", "activite", "histo", "reglages"].forEach(n => { const el = $("v-" + n), on = n === v; el.hidden = !on; if (on && anime) { el.classList.remove("fade"); void el.offsetWidth; el.classList.add("fade"); } });
     document.querySelectorAll(".tab").forEach(t => t.setAttribute("aria-selected", String(t.dataset.v === v)));
     if (v === "histo") renderHistory(); if (v === "activite") renderActivity();
     window.scrollTo({ top: 0 });
@@ -676,7 +677,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     fill.getAnimations().forEach(a => a.cancel());
     const f = fill.animate([{ opacity: getComputedStyle(fill).opacity }, { opacity: 0 }], { duration: 120, fill: "forwards" });
     veilAnim = bg.animate([{ transform: `translate3d(0,0,0) scale(${k})` }, { transform: "translate3d(0,0,0) scale(.001)" }],
-      { duration: reduit() ? 1 : 480, delay: reduit() ? 0 : 60, easing: "cubic-bezier(.6,0,.75,.2)", fill: "forwards" });
+      { duration: reduit() ? 1 : 480, delay: reduit() ? 0 : 60, easing: "cubic-bezier(.6,0,.75,.2)", fill: "both" }); // « both » : le disque reste plein pendant le petit délai (sinon l'écran blanc apparaissait un instant)
     clearTimeout(veilFin);
     veilAnim.onfinish = () => { v.hidden = true; v.classList.remove("closing"); f.cancel(); fill.style.opacity = 0; poserMic(); };
   }
@@ -972,6 +973,8 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   if (!S.get("onb", false)) { drawOnb(); $("onb").hidden = false; }
   $("appVersion").textContent = "Version " + VERSION_APP;
   renderCles(); setupDictation(); reprendreCoffre();
+  document.documentElement.classList.add("pret");
+  setTimeout(prechargerSDK, 800);
   setTimeout(() => ecouteAuto(new URLSearchParams(location.search).has("dicter")), 500);
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => {});
 })();
