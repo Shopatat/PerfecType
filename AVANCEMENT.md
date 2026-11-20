@@ -1,5 +1,8 @@
 # Avancement
 
+## 20/11/2026 — v21
+- La v20 laissait la barre d'onglets beaucoup trop haut sur iPhone : iOS donne au lancement une hauteur de page trop courte, et sans défilement de page plus rien ne la corrigeait. La page, la barre, le voile et la présentation prennent maintenant la hauteur de l'écran lui-même (`--he`, posée dans `index.html` en plein écran iOS).
+
 ## 20/11/2026 — v20
 - Barre d'onglets à sa place dès le lancement : la page ne défile plus, c'est le contenu (`.app`, posé sur tout l'écran) qui défile. iOS en plein écran décalait parfois le défilement de la page au démarrage (barre trop haut jusqu'au premier geste).
 

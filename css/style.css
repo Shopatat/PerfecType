@@ -2,6 +2,7 @@
 html{-webkit-text-size-adjust:100%}
 /* La page elle-même ne défile jamais : c'est .app, posée sur tout l'écran, qui défile. Sur iPhone en plein écran,
    le défilement de la page se décalait parfois au lancement (barre d'onglets trop haut jusqu'au premier geste, 20/11). */
+/* --he : vraie hauteur de l'écran sur iPhone en plein écran (index.html), car iOS donne parfois une hauteur trop courte au lancement. */
 html,body{height:100%;overflow:hidden}body{margin:0;overscroll-behavior:none}
 /* Layout: appli mobile une colonne (max 560px). Quatre onglets en bas : Dicter, Activité, Historique, Réglages. Sobre, beaucoup d'air, le violet réservé à l'action. */
 :root{
@@ -32,7 +33,7 @@ html,body{height:100%;overflow:hidden}body{margin:0;overscroll-behavior:none}
 body{background:var(--bg);color:var(--fg);font-family:var(--body);font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
 button{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--brand);outline-offset:2px;border-radius:10px}
-.app{position:fixed;inset:0;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;box-sizing:border-box;
+.app{position:fixed;top:0;left:0;right:0;height:var(--he,100%);overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;box-sizing:border-box;
   max-width:560px;margin:0 auto;padding-block:calc(14px + env(safe-area-inset-top,0px)) calc(var(--tabh) + 30px + env(safe-area-inset-bottom,0px));
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 
@@ -205,7 +206,7 @@ textarea.input{min-height:76px;field-sizing:content;resize:vertical;line-height:
 .limits{margin:0;padding-left:18px;color:var(--muted);font-size:.86rem;display:flex;flex-direction:column;gap:4px}
 
 /* Onglets */
-.tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));padding-top:8px;
+.tabbar{position:fixed;left:0;right:0;bottom:calc(100% - var(--he,100%));z-index:20;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));padding-top:8px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));pointer-events:none}
 .tabs{pointer-events:auto;max-width:440px;margin:0 auto;height:var(--tabh);background:color-mix(in srgb,var(--surface) 84%,transparent);backdrop-filter:blur(18px) saturate(1.5);-webkit-backdrop-filter:blur(18px) saturate(1.5);
   border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);display:grid;grid-template-columns:1fr 1fr 76px 1fr 1fr;padding:6px;align-items:center}
@@ -237,11 +238,11 @@ body.direct.repos #rawCard{display:none}
 .tab svg{width:22px;height:22px}
 .tab[aria-selected="true"]{color:var(--brand);background:var(--brand-soft)}
 
-.toast{position:fixed;left:50%;bottom:calc(var(--tabh) + 32px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:14px;font-size:.9rem;font-weight:500;transition:opacity .2s,transform .2s;z-index:40;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
+.toast{position:fixed;left:50%;bottom:calc(var(--tabh) + 32px + env(safe-area-inset-bottom,0px) + 100% - var(--he,100%));transform:translate(-50%,20px);opacity:0;background:var(--fg);color:var(--bg);padding:10px 16px;border-radius:14px;font-size:.9rem;font-weight:500;transition:opacity .2s,transform .2s;z-index:40;pointer-events:none;max-width:calc(100% - 32px);text-align:center}
 .toast.show{opacity:1;transform:translate(-50%,0)}
 
 /* Accueil (premier lancement) */
-.onb{position:fixed;inset:0;z-index:50;background:color-mix(in srgb,var(--bg) 70%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:flex-end;justify-content:center;
+.onb{position:fixed;top:0;left:0;right:0;height:var(--he,100%);z-index:50;background:color-mix(in srgb,var(--bg) 70%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:flex;align-items:flex-end;justify-content:center;
   padding:16px max(16px,env(safe-area-inset-right,0px)) calc(16px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px))}
 .sheet{background:var(--surface);border-radius:28px;box-shadow:var(--shadow);max-width:440px;width:100%;padding:24px 22px 18px;display:flex;flex-direction:column;gap:14px;animation:up .35s ease}
 @keyframes up{from{transform:translateY(30px);opacity:0}to{transform:none;opacity:1}}
@@ -282,7 +283,7 @@ body.direct .orb{width:112px;height:112px}
 :root{--v1:#C043E6;--v2:#9A30D6;--v3:#7422B8;--v4:#4C1487;--vglow:rgba(255,120,200,.32);--vorb:rgba(255,255,255,.14)}
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){--v1:#7E2BA6;--v2:#5F1F8C;--v3:#43166C;--v4:#240B40;--vglow:rgba(214,90,190,.16);--vorb:rgba(255,255,255,.09)}}
 :root[data-theme="dark"]{--v1:#7E2BA6;--v2:#5F1F8C;--v3:#43166C;--v4:#240B40;--vglow:rgba(214,90,190,.16);--vorb:rgba(255,255,255,.09)}
-.veil{position:fixed;inset:0;z-index:35;overflow:hidden;color:#fff;cursor:pointer;-webkit-user-select:none;user-select:none;touch-action:manipulation}
+.veil{position:fixed;top:0;left:0;right:0;height:var(--he,100%);z-index:35;overflow:hidden;color:#fff;cursor:pointer;-webkit-user-select:none;user-select:none;touch-action:manipulation}
 /* Le disque est petit (240 px) et agrandi par transform : l'iPhone n'a qu'une petite image à étirer,
    au lieu d'un disque géant à redessiner (c'est ce qui saccadait en arrivant en haut). Une fois l'écran
    couvert, un fond plein écran au même dégradé prend le relais en fondu, et la lueur ne vit que là. */

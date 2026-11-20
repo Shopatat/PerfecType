@@ -11,6 +11,15 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="PerfecType">
+<script>
+/* Sur iPhone en plein écran, iOS donne parfois au lancement une hauteur de page trop courte (barre d'onglets trop haut).
+   L'appli couvre tout l'écran : on prend donc la hauteur de l'écran lui-même. */
+if (navigator.standalone) (function(){
+  var f = function(){ var p = matchMedia("(orientation: portrait)").matches, a = screen.width, b = screen.height;
+    document.documentElement.style.setProperty("--he", (p ? Math.max(a, b) : Math.min(a, b)) + "px"); };
+  f(); addEventListener("orientationchange", function(){ setTimeout(f, 300); });
+})();
+</script>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-180.png">

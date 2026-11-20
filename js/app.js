@@ -1,4 +1,4 @@
-const VERSION_APP = "20 · 20/11/2026";
+const VERSION_APP = "21 · 20/11/2026";
 import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT, prechargerSDK } from "./ia.js";
 
 (() => {
@@ -605,13 +605,14 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     };
     ecouteBoucle = requestAnimationFrame(pas);
   }
+  const hauteurEcran = () => parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--he")) || innerHeight; // voir index.html
   /* Le voile violet : il part du centre du bouton micro et grandit jusqu'à couvrir l'écran. */
   let veilFin = 0;
   let origineVeil = null; // le bouton d'où part la vague : micro du centre, ou gros micro de l'onglet Texte
   const sourceVeil = () => origineVeil && origineVeil.isConnected ? origineVeil : $("micBtn");
   function placerVeil(){
     const o = rectSource(), cx = o.left + o.width / 2, cy = o.top + o.height / 2;
-    const w = innerWidth, h = innerHeight;
+    const w = innerWidth, h = hauteurEcran();
     const R = Math.ceil(Math.max(Math.hypot(cx, cy), Math.hypot(w - cx, cy), Math.hypot(cx, h - cy), Math.hypot(w - cx, h - cy))) + 4;
     return R;
   }
@@ -620,7 +621,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   function geomVeil(){
     placerVeil();
     const o = rectSource(), cx = o.left + o.width / 2, cy = o.top + o.height / 2;
-    const R = Math.max(Math.hypot(cx, cy), Math.hypot(innerWidth - cx, cy), Math.hypot(cx, innerHeight - cy), Math.hypot(innerWidth - cx, innerHeight - cy)) + 8;
+    const R = Math.max(Math.hypot(cx, cy), Math.hypot(innerWidth - cx, cy), Math.hypot(cx, hauteurEcran() - cy), Math.hypot(innerWidth - cx, hauteurEcran() - cy)) + 8;
     Object.assign($("veilBg").style, { width: "240px", height: "240px", left: cx - 120 + "px", top: cy - 120 + "px" });
     $("veilFill").style.setProperty("--cx", cx + "px"); $("veilFill").style.setProperty("--cy", cy + "px");
     return R / 120;
