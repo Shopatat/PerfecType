@@ -1,5 +1,8 @@
 # Avancement
 
+## 20/11/2026 — v14
+- Écran d'écoute allégé : plus de « Sauvegarde dans un instant » ni de compteur de morceaux. Restent le micro, les barres, le chrono, « J'écoute… » et « Touche n'importe où pour arrêter ». La sauvegarde et le découpage continuent en fond.
+
 ## 19/11/2026 — v13
 - « Voir le brut » retiré en écriture directe : on ne voit que le texte final, c'est plus magique (demande de Fabien). Le brut reste en mode classique (Écriture directe désactivée).
 

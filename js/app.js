@@ -1,4 +1,4 @@
-const VERSION_APP = "13 · 19/11/2026";
+const VERSION_APP = "14 · 20/11/2026";
 import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT } from "./ia.js";
 
 (() => {
@@ -569,13 +569,10 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
       const now = Date.now();
       if (now - dernierTexte > 300 && session) {
         dernierTexte = now;
-        const segs = Object.values(session.segs), faits = segs.filter(x => x.text != null).length;
         const entend = Date.now() - dernierSon < 2500;
         $("veilTime").textContent = fmtDuree(micro.duree());
         $("veilLabel").textContent = entend ? "J'écoute…" : "Je n'entends rien…";
-        $("veilSub").textContent = (session.sauve ? "Tout est sauvegardé sur ton téléphone" : "Sauvegarde dans un instant") + (faits ? " · " + faits + " morceau" + (faits > 1 ? "x" : "") + " déjà transcrit" + (faits > 1 ? "s" : "") : "");
         $("orbLabel").textContent = entend ? "J'écoute… " + fmtDuree(micro.duree()) : "J'écoute (je n'entends rien)… " + fmtDuree(micro.duree());
-        $("orbSub").textContent = (session.sauve ? "Tout est sauvegardé sur ton téléphone" : "Sauvegarde dans un instant") + (faits ? " · " + faits + " morceau" + (faits > 1 ? "x" : "") + " déjà transcrit" + (faits > 1 ? "s" : "") : "");
       }
       ecouteBoucle = requestAnimationFrame(pas);
     };
@@ -650,7 +647,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     $("orb").classList.toggle("on", on); $("recTag").hidden = state !== "listening";
     $("orb").setAttribute("aria-label", state === "listening" ? "Arrêter" : "Commencer à parler");
     if (!animerMots(state, $("orbLabel"))) { $("orbLabel").getAnimations().forEach(a => a.cancel()); $("orbLabel").textContent = { listening: "J'écoute…", starting: "Ouverture du micro…" }[state] || "Touche pour parler"; }
-    if (state === "listening") { ouvrirVeil(); if (micro.actif()) boucleEcoute(); else { $("veilTime").textContent = ""; $("veilLabel").textContent = "J'écoute…"; $("veilSub").textContent = "Dictée du navigateur"; } }
+    if (state === "listening") { ouvrirVeil(); if (micro.actif()) boucleEcoute(); else { $("veilTime").textContent = ""; $("veilLabel").textContent = "J'écoute…"; } }
     else fermerVeil();
     $("orbSub").textContent = state === "listening" ? "Touche quand tu as fini" : state === "busy" || state === "thinking" ? "Touche pour annuler" : "";
   }

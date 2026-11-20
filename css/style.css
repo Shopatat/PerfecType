@@ -273,7 +273,6 @@ body.direct .orb{width:112px;height:112px}
 .veil-wave i{width:5px;height:6px;border-radius:3px;background:#fff;opacity:.9;transition:height .08s linear}
 .veil-time{font-family:var(--display);font-weight:800;font-size:3rem;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
 .veil-label{font-family:var(--display);font-weight:700;font-size:1.1rem}
-.veil-sub{font-size:.9rem;opacity:.85;text-align:center;max-width:320px;min-height:1.4em}
 .veil-hint{position:absolute;left:0;right:0;bottom:calc(28px + env(safe-area-inset-bottom,0px));text-align:center;font-size:.9rem;font-weight:500;opacity:.75}
 @media (prefers-reduced-motion:reduce){.veil-in{transition:opacity .2s!important}}
 
