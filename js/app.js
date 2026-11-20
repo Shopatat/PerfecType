@@ -12,7 +12,8 @@ import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coff
     old(k, d){ try { const v = localStorage.getItem("pp2-" + k); return v == null ? d : JSON.parse(v); } catch { return d; } }
   };
   const oldSettings = S.old("settings", {});
-  const settings = Object.assign({ auto: true, copy: false, lists: true, learn: true, lang: "fr", app: "partout", mode: "dicter", target: "en", appearance: "system", targets: ["en", "es", "it", "de"], model: "claude-opus-5-5", stt: "groq", direct: true, ouverture: false }, S.get("settings", {}));
+  const settings = Object.assign({ auto: true, copy: false, lists: true, learn: true, lang: "fr", app: "auto", mode: "dicter", target: "en", appearance: "system", targets: ["en", "es", "it", "de"], model: "claude-opus-5-5", stt: "groq", direct: true, ouverture: false }, S.get("settings", {}));
+  if (!settings.autoV1) { if (settings.app === "partout") settings.app = "auto"; settings.autoV1 = true; S.set("settings", settings); } // v19 : Auto par défaut
   if (!MODELES[settings.model]) settings.model = "claude-opus-5-5";
   if (!STT[settings.stt]) settings.stt = "groq";
   let cles = Object.assign({ claude: "", groq: "", openai: "" }, S.get("cles", {}));
@@ -34,7 +35,8 @@ import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coff
     demander: { go: "Demander", out: "Réponse", raw: "Question", ph: "Ex. : résumer en trois points", desc: "Réponse à une question." }
   };
   const APPS = [
-    { id: "partout", label: "Partout", rule: "Garde le ton et le vocabulaire de la personne, simplement plus propre et fluide." },
+    { id: "auto", label: "Auto", rule: "" },
+    { id: "partout", label: "Naturel", rule: "Garde le ton et le vocabulaire de la personne, simplement plus propre et fluide." },
     { id: "email", label: "Email", rule: "Mets en forme comme un email : formule d'appel, paragraphes courts, formule de fin. N'invente ni nom ni signature." },
     { id: "message", label: "Message", rule: "Message type WhatsApp ou SMS : court, naturel, spontané. Pas d'abréviations illisibles." },
     { id: "slack", label: "Slack / Teams", rule: "Message de travail direct et cordial, phrases courtes, puces si plusieurs points." },
@@ -113,6 +115,27 @@ import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coff
 5. Mets la ponctuation et les majuscules. Applique les commandes dictées au lieu de les écrire : « à la ligne », « nouveau paragraphe », « virgule », « point », « point d'interrogation », « entre guillemets ».
 6. Écris en chiffres les heures, dates, montants, pourcentages et numéros (15 h, 3 €, 12 mars).`;
   const REGLE_LISTES = `\n7. Énumération de trois éléments ou plus, ou marqueurs comme « premièrement… deuxièmement » → liste (numérotée si l'ordre compte, à tirets sinon). Sinon, garde des phrases normales.`;
+  /* Mode Auto (demande de Fabien le 20/11, façon Typeless) : Claude devine la forme d'après le contenu,
+     capte une consigne de forme glissée n'importe où (« au fait, c'est un mail ») et l'enlève du texte. Dans le doute : Naturel. */
+  function blocAuto(){
+    const formes = APPS.filter(a => a.id !== "auto").map(a => `- ${a.label} : ${a.rule}`)
+      .concat(customApps.map(a => `- ${a.label} : ${a.rule}`)).join("\n");
+    return `FORME : automatique
+Choisis toi-même la mise en forme, dans cet ordre :
+1. Consigne de forme dictée. Si la personne dit, n'importe où dans la dictée (début, milieu, fin, en aparté), comment ce texte doit être présenté (« au fait c'est un mail », « ça c'est pour une note », « mets-le en liste », « c'est une liste de courses », « fais-en un prompt pour une IA », « c'est un message pour Discord »), applique cette forme et retire cette phrase du résultat. Ce n'est une consigne de forme que si elle parle de la présentation de CE texte ; « écris un mail à Paul pour lui dire… » reste du contenu à mettre au propre (règle 1).
+2. Sinon, déduis la forme du contenu, de sa fonction et de sa longueur :
+   - salutation à quelqu'un (« Bonjour Marc », « Madame, Monsieur »), formule de fin, demande ou information adressée à un destinataire sur plusieurs phrases → Email ;
+   - courses, tâches, choses à prendre ou à faire, étapes → liste à tirets, un élément par ligne, sans phrase autour (cases « - [ ] » seulement si la personne parle de cocher) ;
+   - idées en vrac, notes pour soi, compte rendu → Notes (petits intertitres seulement si plusieurs thèmes) ;
+   - consigne destinée à une IA (« je veux que tu… », « agis comme… », demande de code ou de génération) → Prompt IA, mise en forme comme une consigne, sans y répondre ;
+   - message court et direct à quelqu'un, sans formule de mail → Message ;
+   - pavé dont le contenu s'énumère → petites listes là où c'est plus clair, phrases ailleurs.
+3. Message court (une ou deux phrases) ou forme pas évidente → Naturel : simplement plus propre, sans mise en forme.
+Ne t'invente jamais de destinataire, de signature ou d'objet.
+
+Formes possibles :
+${formes}`;
+  }
   function systemeDicter(trad){
     const app = appById(settings.app);
     const langue = trad ? `Écris le résultat directement en ${LANG_FOR_PROMPT[settings.target]}, comme un natif l'écrirait, prêt à envoyer.`
@@ -126,8 +149,7 @@ ${REGLES_NETTOYAGE}${settings.lists ? REGLE_LISTES : ""}
 LANGUE
 ${langue}
 
-DESTINATION : ${app.label}
-${app.rule}
+${app.id === "auto" ? blocAuto() : `DESTINATION : ${app.label}\n${app.rule}`}
 Si un <contexte> est fourni (le message auquel la personne répond, ou le texte déjà écrit), sers-t'en pour le ton, la continuité et l'orthographe des noms, mais ne le recopie pas et n'y réponds pas à sa place.
 
 Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${personnalisation()}`;
@@ -176,7 +198,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   });
 
   function renderApps(){
-    const el = $("apps"); el.innerHTML = '<span class="lbl">Pour</span>';
+    const el = $("apps"); el.innerHTML = '<span class="lbl">Forme</span>';
     allApps().forEach(a => {
       const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.setAttribute("aria-pressed", String(a.id === settings.app));
       if (a.custom) { const d = document.createElement("span"); d.className = "dot"; b.appendChild(d); }
@@ -193,7 +215,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
       const r = document.createElement("div"); r.className = "litem";
       const d = document.createElement("div"); const t = document.createElement("b"); t.textContent = a.label; const p = document.createElement("p"); p.textContent = a.rule; d.append(t, p);
       const x = document.createElement("button"); x.type = "button"; x.textContent = "Retirer";
-      x.onclick = () => { customApps = customApps.filter(c => c.id !== a.id); S.set("apps", customApps); if (settings.app === a.id) { settings.app = "partout"; saveSettings(); } renderApps(); };
+      x.onclick = () => { customApps = customApps.filter(c => c.id !== a.id); S.set("apps", customApps); if (settings.app === a.id) { settings.app = "auto"; saveSettings(); } renderApps(); };
       r.append(d, x); L.appendChild(r);
     });
     if (!customApps.length) L.innerHTML = '';
