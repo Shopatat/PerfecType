@@ -1,4 +1,4 @@
-const VERSION_APP = "16 · 20/11/2026";
+const VERSION_APP = "17 · 20/11/2026";
 import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT } from "./ia.js";
 
 (() => {
@@ -583,7 +583,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   let origineVeil = null; // le bouton d'où part la vague : micro du centre, ou gros micro de l'onglet Texte
   const sourceVeil = () => origineVeil && origineVeil.isConnected ? origineVeil : $("micBtn");
   function placerVeil(){
-    const o = sourceVeil().getBoundingClientRect(), cx = o.left + o.width / 2, cy = o.top + o.height / 2;
+    const o = rectSource(), cx = o.left + o.width / 2, cy = o.top + o.height / 2;
     const w = innerWidth, h = innerHeight;
     const R = Math.ceil(Math.max(Math.hypot(cx, cy), Math.hypot(w - cx, cy), Math.hypot(cx, h - cy), Math.hypot(w - cx, h - cy))) + 4;
     return R;
@@ -592,7 +592,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   let veilAnim = null;
   function geomVeil(){
     placerVeil();
-    const o = sourceVeil().getBoundingClientRect(), cx = o.left + o.width / 2, cy = o.top + o.height / 2;
+    const o = rectSource(), cx = o.left + o.width / 2, cy = o.top + o.height / 2;
     const R = Math.max(Math.hypot(cx, cy), Math.hypot(innerWidth - cx, cy), Math.hypot(cx, innerHeight - cy), Math.hypot(innerWidth - cx, innerHeight - cy)) + 8;
     Object.assign($("veilBg").style, { width: "240px", height: "240px", left: cx - 120 + "px", top: cy - 120 + "px" });
     $("veilFill").style.setProperty("--cx", cx + "px"); $("veilFill").style.setProperty("--cy", cy + "px");
@@ -600,6 +600,18 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   }
   /* Le micro du bas glisse vers le centre en grossissant ; la vague part de lui. À l'arrêt, le violet se rétracte dans le bouton, qui redescend avec un léger rebond. */
   let vol = null, veilPret = false, centreCache = null;
+  function rectSource(){ return vol ? { left: vol.tx - 1, top: vol.ty - 1, width: 2, height: 2 } : sourceVeil().getBoundingClientRect(); }
+  /* Ressort façon iOS (20/11) : courbe linear() tirée d'un vrai ressort amorti, avec un léger dépassement avant de se poser. */
+  const LINEAR_OK = (() => { try { return CSS.supports("animation-timing-function", "linear(0, 1)"); } catch { return false; } })();
+  function ressort(amorti, raideur, repli){
+    const w0 = Math.sqrt(raideur), z = amorti / (2 * w0), wd = w0 * Math.sqrt(1 - z * z);
+    const x = t => 1 - Math.exp(-z * w0 * t) * (Math.cos(wd * t) + (z * w0 / wd) * Math.sin(wd * t));
+    let T = 0.2; for (let t = 0; t < 2; t += 0.004) if (Math.abs(1 - x(t)) > 0.003) T = t;
+    const n = 50, pts = []; for (let i = 0; i <= n; i++) pts.push(+x(T * i / n).toFixed(4)); pts[n] = 1;
+    return { duree: Math.round(T * 1000), easing: LINEAR_OK ? "linear(" + pts.join(",") + ")" : repli };
+  }
+  const RESSORT_MONTEE = ressort(22, 230, "cubic-bezier(.3,1.25,.5,1)"); // part vite, dépasse à peine, se pose
+  const RESSORT_DESCENTE = ressort(16, 210, "cubic-bezier(.34,1.5,.55,1)"); // retour avec un rebond net
   addEventListener("resize", () => { centreCache = null; });
   function centreEcoute(){
     const v = $("veil"), cache = v.hidden, vin = v.querySelector(".veil-in");
@@ -622,33 +634,26 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     document.body.appendChild(c); b.style.visibility = "hidden";
     const dx = t.x - (r.left + r.width / 2), dy = t.y - (r.top + r.height / 2), s = t.d / d;
     const a = c.animate([{ transform: "translate(0,0) scale(1)" }, { transform: `translate(${dx}px,${dy}px) scale(${s})` }],
-      { duration: reduit() ? 1 : 420, easing: "cubic-bezier(.3,.7,.2,1)", fill: "forwards" });
-    vol = { c, dx, dy, s, arrive: false };
-    vol.pret = a.finished.then(() => { if (vol) { vol.arrive = true; c.classList.add("attente"); } }).catch(() => {});
+      { duration: reduit() ? 1 : RESSORT_MONTEE.duree, easing: RESSORT_MONTEE.easing, fill: "forwards" });
+    vol = { c, dx, dy, s, tx: t.x, ty: t.y, arrive: false };
+    vol.pret = a.finished.then(() => { if (vol) vol.arrive = true; }).catch(() => {});
     origineVeil = c;
   }
-  let finEnregistrement = null; // promesse : l'enregistreur a fini (le bouton attend au centre en respirant)
   function poserMic(){
-    const v0 = vol; if (!v0 || v0.enAttente) return;
-    if (finEnregistrement && !v0.attendu) {
-      v0.attendu = v0.enAttente = true; v0.c.classList.add("attente");
-      Promise.all([finEnregistrement.catch(() => {}), new Promise(r => setTimeout(r, reduit() ? 0 : 450))]).then(() => { finEnregistrement = null; v0.enAttente = false; poserMic(); });
-      return;
-    }
-    vol = null; v0.c.classList.remove("attente");
+    const v0 = vol; if (!v0) return;
+    vol = null;
     const { c, dx, dy, s } = v0;
-    c.getAnimations().forEach(a => a.cancel());
-    c.style.transform = `translate(${dx}px,${dy}px) scale(${s})`;
-    const a = c.animate([{ transform: `translate(${dx}px,${dy}px) scale(${s})` }, { transform: "translate(0,0) scale(1)" }],
-      { duration: reduit() ? 1 : 560, easing: "cubic-bezier(.34,1.5,.55,1)", fill: "forwards" });
+    const enCours = c.getAnimations().filter(a => a.effect && a.effect.getKeyframes().some(k => "transform" in k));
+    const depart = getComputedStyle(c).transform; // repart d'où il est, même s'il n'était pas tout à fait arrivé
+    enCours.forEach(a => a.cancel());
+    const a = c.animate([{ transform: depart === "none" ? `translate(${dx}px,${dy}px) scale(${s})` : depart }, { transform: "translate(0,0) scale(1)" }],
+      { duration: reduit() ? 1 : RESSORT_DESCENTE.duree, easing: RESSORT_DESCENTE.easing, fill: "forwards" });
     a.onfinish = () => { $("micBtn").style.visibility = ""; c.remove(); if (origineVeil === c) origineVeil = null; };
   }
   function ouvrirVeil(){
     const v = $("veil"); clearTimeout(veilFin);
-    if (!v.hidden && v.classList.contains("open")) return;
-    if (vol && !vol.arrive) { const v0 = vol; v0.pret.then(() => { if (vol === v0 && (micro.actif() || (navDictee && navDictee.actif()))) ouvrirVeil(); }); return; }
-    if (vol) vol.c.classList.remove("attente");
-    if (vol) vol.c.animate([{ opacity: 1 }, { opacity: 0 }], { duration: reduit() ? 1 : 320, delay: reduit() ? 0 : 240, easing: "ease-out", fill: "forwards" });
+    if (!v.hidden && !v.classList.contains("closing")) return; // déjà ouvert ou en train de s'ouvrir
+    if (vol) vol.c.animate([{ opacity: 1 }, { opacity: 0 }], { duration: reduit() ? 1 : 300, delay: reduit() ? 0 : 320, easing: "ease-out", fill: "forwards" });
     const k = geomVeil(); v.classList.remove("closing"); v.hidden = false;
     if (veilAnim) veilAnim.cancel();
     const bg = $("veilBg"), fill = $("veilFill");
@@ -663,7 +668,8 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     if (v.hidden) { poserMic(); return; }
     if (v.classList.contains("closing")) return; // déjà en train de se refermer
     if (vol) { const c = vol.c; c.getAnimations().filter(a => a.effect && a.effect.getKeyframes().some(k => "opacity" in k)).forEach(a => a.cancel());
-      c.style.opacity = 0; c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: reduit() ? 1 : 260, delay: reduit() ? 0 : 260, fill: "forwards" }).onfinish = () => { c.style.opacity = 1; }; }
+      c.style.opacity = 0; c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: reduit() ? 1 : 200, delay: reduit() ? 0 : 90, fill: "forwards" }).onfinish = () => { c.style.opacity = 1; };
+      setTimeout(poserMic, reduit() ? 0 : 260); }
     const k = geomVeil(); v.classList.add("closing"); v.classList.remove("open"); veilPret = false;
     const bg = $("veilBg"), fill = $("veilFill");
     if (veilAnim) veilAnim.cancel();
@@ -738,9 +744,9 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
       });
       return;
     }
-    if (micro.actif()) {
+    if (micro.actif() && !demarrage) {
       const sess = session;
-      const fin = micro.arreter(); finEnregistrement = fin;
+      const fin = micro.arreter();
       orbState("busy"); // ferme le violet tout de suite, sans attendre la fin de l'enregistreur
       const dernier = await fin;
       if (!dernier && !Object.keys(sess.segs).length) { orbState("idle"); session = null; setStatus("Je n'ai rien entendu. Réessaie en parlant un peu plus longtemps."); return; }
@@ -749,12 +755,15 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
       await finir(sess);
       return;
     }
-    leaveExample(); setStatus(""); orbState("starting");
-    const sess = session = nouvelleSession();
-    try { await micro.demarrer({ morceau: x => planifier(sess, x), progres: x => sauverEnCours(sess, x) }); orbState("listening"); }
-    catch (e) {
+    if (demarrage && demarrageClique) return; // déjà en route
+    if (!demarrage) prechauffer();
+    const p = demarrage; if (!p) return;
+    demarrageClique = true; orbState("starting");
+    const res = await p; demarrage = null;
+    if (res === true) orbState("listening");
+    else {
       orbState("idle"); session = null;
-      setStatus(e && e.name === "NotAllowedError" ? "Micro refusé. Autorise-le dans les réglages du navigateur, ou utilise le micro du clavier." : "Le micro n'a pas pu démarrer.");
+      setStatus(res && res.name === "NotAllowedError" ? "Micro refusé. Autorise-le dans les réglages du navigateur, ou utilise le micro du clavier." : "Le micro n'a pas pu démarrer.");
     }
   }
 
@@ -837,13 +846,28 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   function micCentre(){
     if (!modeDictee()) { go("dicter"); return; }
     const demarre = !micro.actif() && !(navDictee && navDictee.actif()) && !transcribing && !running;
-    if (!demarre) { orbClick(); return; }
+    if (!demarre && !demarrage) { orbClick(); return; }
     if (vol) return; // déjà en vol
     ongletApres = $("v-dicter").hidden;
     envolerMic();
-    if (vol) vol.pret.then(() => requestAnimationFrame(() => orbClick())); else { if (ongletApres) { go("dicter"); ongletApres = false; } orbClick(); }
+    orbClick(); // le micro était déjà en train de s'allumer depuis le toucher
+    if (vol) setTimeout(() => { if (vol && (demarrage || micro.actif())) ouvrirVeil(); }, reduit() ? 0 : 150);
+    else if (ongletApres) { go("dicter"); ongletApres = false; }
   }
   $("micBtn").onclick = micCentre;
+  /* Allumer le micro fige l'iPhone un instant : on le fait dès que le doigt touche le bouton (il est immobile, enfoncé),
+     avant qu'il ne s'envole. Sans appui complet dans la seconde et demie, on relâche le micro. */
+  let demarrage = null, demarrageClique = false;
+  function prechauffer(){
+    if (demarrage || micro.actif() || transcribing || running || session) return;
+    const mode = modeDictee(); if (!mode || mode === "navigateur") return;
+    demarrageClique = false; leaveExample(); setStatus("");
+    const sess = session = nouvelleSession();
+    demarrage = micro.demarrer({ morceau: x => planifier(sess, x), progres: x => sauverEnCours(sess, x) }).then(() => true, e => e || new Error("micro"));
+    const d = demarrage;
+    setTimeout(() => { if (demarrage === d && !demarrageClique) { d.then(r => { if (r === true && !demarrageClique) micro.annuler(); }); if (session === sess && !demarrageClique) session = null; demarrage = null; } }, 1500);
+  }
+  $("micBtn").addEventListener("pointerdown", prechauffer);
   /* Écouter dès l'ouverture (réglage, ou adresse avec ?dicter) : au lancement, et au retour dans l'appli après plus de 2 minutes ailleurs. */
   let cacheeDepuis = 0;
   function ecouteAuto(force){

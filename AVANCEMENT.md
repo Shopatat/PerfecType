@@ -1,5 +1,8 @@
 # Avancement
 
+## 20/11/2026 — v17
+- Animation du micro en un seul geste, façon iOS : le micro s'allume dès que le doigt touche le bouton (encore immobile), la vague part pendant que le bouton monte, courbes à ressort (`linear()` calculé d'un vrai ressort amorti, repli cubic-bezier). Au retour, le bouton redescend pendant que le violet se rétracte, avec rebond. Plus de pause au centre.
+
 ## 20/11/2026 — v16
 - Animation du micro fluide sur iPhone : le micro s'allume une fois le bouton posé au centre (anneau qui respire pendant l'attente), le violet se referme dès le toucher d'arrêt, le bouton respire le temps que l'enregistrement se termine puis redescend ; le micro n'est vraiment coupé qu'après (1,3 s). Les barres de la vague ne bougent qu'une fois l'écran couvert.
 - Cercle parfait : le bouton qui vole est un disque neuf découpé en cercle (la copie du bouton gardait un coin carré une fois agrandie).
