@@ -1,5 +1,9 @@
 # Avancement
 
+## 20/11/2026 — v19
+- Forme « Auto » par défaut, façon Typeless : Claude devine la mise en forme d'après la dictée (mail, liste, notes, prompt IA, message), applique une consigne glissée n'importe où (« au fait, c'est un mail ») en la retirant, et reste en Naturel (ex-« Partout ») si c'est court ou flou. Les anciens réglages sur « Partout » passent en Auto une fois.
+- Interface plus pro : ton neutre sans tutoiement ni explications partout, encadré « Ce que la page ne peut pas faire » retiré. Clés API et modèle dans une sous-page « Clés API et modèles », sauvegarde et données dans une autre.
+
 ## 20/11/2026 — v18
 - Retour sans flash : l'animation de fermeture laissait le disque à zéro pendant son petit délai de départ, la page apparaissait un instant (`fill: "both"`). Le disque a aussi exactement le même dégradé que le fond plein écran (`circle closest-side`), donc plus de saut de couleur.
 - Ouverture stable : la page reste cachée (fond seul) tant que le script ne l'a pas mise en place, plus de fondu d'entrée au lancement, `body` démarre en `direct repos`. Le SDK Claude se charge après le lancement (import dynamique), plus pendant.
