@@ -134,6 +134,8 @@ export function enregistreur() {
   return {
     dispo: () => !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder),
     actif: () => actif,
+    // Lancée sans appui (écoute dès l'ouverture), l'analyse du son peut rester en pause sur iPhone : on ne dit alors pas « je n'entends rien ».
+    audioOk: () => !!(ctxAudio && ctxAudio.state === "running"),
     async demarrer({ morceau, progres } = {}) {
       flux = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
       onMorceau = morceau || null; onProgres = progres || null; index = 0; actif = true; departTotal = Date.now(); dernierProgres = Date.now();
@@ -141,6 +143,7 @@ export function enregistreur() {
         ctxAudio = new (window.AudioContext || window.webkitAudioContext)();
         analyse = ctxAudio.createAnalyser(); analyse.fftSize = 256;
         ctxAudio.createMediaStreamSource(flux).connect(analyse);
+        if (ctxAudio.state === "suspended") { ctxAudio.resume().catch(() => {}); document.addEventListener("pointerdown", () => ctxAudio && ctxAudio.resume().catch(() => {}), { once: true }); }
       } catch { analyse = null; }
       nouveau(); veiller();
       // L'écran qui se met en veille couperait le micro : on le garde allumé pendant la dictée.

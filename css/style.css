@@ -204,7 +204,21 @@ textarea.input{min-height:76px;field-sizing:content;resize:vertical;line-height:
 .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:20;padding-bottom:calc(10px + env(safe-area-inset-bottom,0px));padding-top:8px;
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));pointer-events:none}
 .tabs{pointer-events:auto;max-width:440px;margin:0 auto;height:var(--tabh);background:color-mix(in srgb,var(--surface) 84%,transparent);backdrop-filter:blur(18px) saturate(1.5);-webkit-backdrop-filter:blur(18px) saturate(1.5);
-  border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);display:grid;grid-template-columns:repeat(4,1fr);padding:6px}
+  border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);display:grid;grid-template-columns:1fr 1fr 76px 1fr 1fr;padding:6px;align-items:center}
+/* Bouton micro du centre : toujours sous le pouce, sur tous les onglets (demande de Fabien le 20/11). */
+.micbtn{justify-self:center;width:66px;height:66px;margin-top:-30px;border-radius:50%;border:4px solid var(--bg);background:var(--grad);color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 12px 26px -10px var(--fuchsia);transition:transform .15s ease}
+.micbtn svg{width:28px;height:28px}
+.micbtn:active{transform:scale(.93)}
+.micbtn::after{content:"";position:absolute;inset:-4px;border-radius:50%;border:2.5px solid transparent;border-top-color:#fff;opacity:0;transition:opacity .2s}
+.micbtn{position:relative}
+.micbtn.busy::after{opacity:.9;animation:tourne .9s linear infinite}
+@keyframes tourne{to{transform:rotate(360deg)}}
+/* Le micro en vol : copie du bouton qui monte au centre, d'où part la vague (et qui redescend à l'arrêt). */
+.micvol{position:fixed;margin:0;z-index:36;border-color:transparent;pointer-events:none;will-change:transform,opacity;transition:border-color .2s}
+/* Un seul micro, celui du bas (20/11) : le gros micro de la page disparaît. La zone ne s'affiche que pendant le travail (mots d'attente). */
+#orb{display:none}
+body.repos .stage{display:none}
+body.direct.repos #rawCard{display:none}
 .tab{border:0;background:transparent;border-radius:18px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;color:var(--faint);font-size:.7rem;font-weight:600}
 .tab svg{width:22px;height:22px}
 .tab[aria-selected="true"]{color:var(--brand);background:var(--brand-soft)}

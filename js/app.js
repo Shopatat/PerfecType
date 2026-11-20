@@ -1,4 +1,4 @@
-const VERSION_APP = "14 · 20/11/2026";
+const VERSION_APP = "15 · 20/11/2026";
 import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT } from "./ia.js";
 
 (() => {
@@ -12,7 +12,7 @@ import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coff
     old(k, d){ try { const v = localStorage.getItem("pp2-" + k); return v == null ? d : JSON.parse(v); } catch { return d; } }
   };
   const oldSettings = S.old("settings", {});
-  const settings = Object.assign({ auto: true, copy: false, lists: true, learn: true, lang: "fr", app: "partout", mode: "dicter", target: "en", appearance: "system", targets: ["en", "es", "it", "de"], model: "claude-opus-5-5", stt: "groq", direct: true }, S.get("settings", {}));
+  const settings = Object.assign({ auto: true, copy: false, lists: true, learn: true, lang: "fr", app: "partout", mode: "dicter", target: "en", appearance: "system", targets: ["en", "es", "it", "de"], model: "claude-opus-5-5", stt: "groq", direct: true, ouverture: false }, S.get("settings", {}));
   if (!MODELES[settings.model]) settings.model = "claude-opus-5-5";
   if (!STT[settings.stt]) settings.stt = "groq";
   let cles = Object.assign({ claude: "", groq: "", openai: "" }, S.get("cles", {}));
@@ -505,7 +505,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   /* ================= Réglages ================= */
   function bindSwitch(id, key){ const el = $(id); const draw = () => el.setAttribute("aria-checked", String(!!settings[key])); el.onclick = () => { settings[key] = !settings[key]; saveSettings(); draw(); }; draw(); }
   bindSwitch("swDirect", "direct"); $("swDirect").addEventListener("click", () => renderMode());
-  bindSwitch("swAuto", "auto"); bindSwitch("swCopy", "copy"); bindSwitch("swList", "lists"); bindSwitch("swLearn", "learn");
+  bindSwitch("swAuto", "auto"); bindSwitch("swCopy", "copy"); bindSwitch("swList", "lists"); bindSwitch("swOuverture", "ouverture"); bindSwitch("swLearn", "learn");
   function applyAppearance(){
     const r = document.documentElement;
     if (settings.appearance === "system") r.removeAttribute("data-theme"); else r.setAttribute("data-theme", settings.appearance);
@@ -557,7 +557,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     cancelAnimationFrame(ecouteBoucle);
     const bars = [...document.querySelectorAll(".stage .wave i")], vbars = [...document.querySelectorAll("#veilWave i")];
     const formes = vbars.map((_, k) => 0.35 + 0.65 * Math.sin(Math.PI * (k + 0.5) / vbars.length));
-    let lisse = 0, dernierTexte = 0, dernierSon = 0;
+    let lisse = 0, dernierTexte = 0, dernierSon = Date.now();
     const pas = () => {
       if (!micro.actif()) { bars.forEach(b => b.style.height = ""); $("stage").classList.remove("live"); return; }
       $("stage").classList.add("live");
@@ -569,7 +569,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
       const now = Date.now();
       if (now - dernierTexte > 300 && session) {
         dernierTexte = now;
-        const entend = Date.now() - dernierSon < 2500;
+        const entend = !micro.audioOk() || Date.now() - dernierSon < 2500;
         $("veilTime").textContent = fmtDuree(micro.duree());
         $("veilLabel").textContent = entend ? "J'écoute…" : "Je n'entends rien…";
         $("orbLabel").textContent = entend ? "J'écoute… " + fmtDuree(micro.duree()) : "J'écoute (je n'entends rien)… " + fmtDuree(micro.duree());
@@ -580,8 +580,10 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   }
   /* Le voile violet : il part du centre du bouton micro et grandit jusqu'à couvrir l'écran. */
   let veilFin = 0;
+  let origineVeil = null; // le bouton d'où part la vague : micro du centre, ou gros micro de l'onglet Texte
+  const sourceVeil = () => origineVeil && origineVeil.isConnected ? origineVeil : $("micBtn");
   function placerVeil(){
-    const o = $("orb").getBoundingClientRect(), cx = o.left + o.width / 2, cy = o.top + o.height / 2;
+    const o = sourceVeil().getBoundingClientRect(), cx = o.left + o.width / 2, cy = o.top + o.height / 2;
     const w = innerWidth, h = innerHeight;
     const R = Math.ceil(Math.max(Math.hypot(cx, cy), Math.hypot(w - cx, cy), Math.hypot(cx, h - cy), Math.hypot(w - cx, h - cy))) + 4;
     return R;
@@ -590,15 +592,51 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   let veilAnim = null;
   function geomVeil(){
     placerVeil();
-    const o = $("orb").getBoundingClientRect(), cx = o.left + o.width / 2, cy = o.top + o.height / 2;
+    const o = sourceVeil().getBoundingClientRect(), cx = o.left + o.width / 2, cy = o.top + o.height / 2;
     const R = Math.max(Math.hypot(cx, cy), Math.hypot(innerWidth - cx, cy), Math.hypot(cx, innerHeight - cy), Math.hypot(innerWidth - cx, innerHeight - cy)) + 8;
     Object.assign($("veilBg").style, { width: "240px", height: "240px", left: cx - 120 + "px", top: cy - 120 + "px" });
     $("veilFill").style.setProperty("--cx", cx + "px"); $("veilFill").style.setProperty("--cy", cy + "px");
     return R / 120;
   }
+  /* Le micro du bas glisse vers le centre en grossissant ; la vague part de lui. À l'arrêt, le violet se rétracte dans le bouton, qui redescend avec un léger rebond. */
+  let vol = null;
+  function centreEcoute(){
+    const v = $("veil"), cache = v.hidden, vin = v.querySelector(".veil-in");
+    if (cache) { v.style.visibility = "hidden"; v.hidden = false; }
+    vin.style.transition = "none"; vin.style.transform = "none";
+    const r = v.querySelector(".veil-orb").getBoundingClientRect();
+    vin.style.transform = ""; void vin.offsetWidth; vin.style.transition = "";
+    if (cache) { v.hidden = true; v.style.visibility = ""; }
+    return { x: r.left + r.width / 2, y: r.top + r.height / 2, d: r.width };
+  }
+  function envolerMic(){
+    if (vol) return;
+    const b = $("micBtn"), r = b.getBoundingClientRect(); if (!r.width) return;
+    const t = centreEcoute(), c = b.cloneNode(true);
+    c.removeAttribute("id"); c.classList.remove("busy"); c.classList.add("micvol"); c.setAttribute("aria-hidden", "true");
+    Object.assign(c.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px" });
+    document.body.appendChild(c); b.style.visibility = "hidden";
+    const dx = t.x - (r.left + r.width / 2), dy = t.y - (r.top + r.height / 2), s = t.d / r.width;
+    const a = c.animate([{ transform: "translate(0,0) scale(1)" }, { transform: `translate(${dx}px,${dy}px) scale(${s})` }],
+      { duration: reduit() ? 1 : 420, easing: "cubic-bezier(.3,.7,.2,1)", fill: "forwards" });
+    vol = { c, dx, dy, s, arrive: false };
+    vol.pret = a.finished.then(() => { if (vol) vol.arrive = true; }).catch(() => {});
+    origineVeil = c;
+  }
+  function poserMic(){
+    const v0 = vol; if (!v0) return; vol = null;
+    const { c, dx, dy, s } = v0;
+    c.getAnimations().forEach(a => a.cancel());
+    c.style.transform = `translate(${dx}px,${dy}px) scale(${s})`;
+    const a = c.animate([{ transform: `translate(${dx}px,${dy}px) scale(${s})` }, { transform: "translate(0,0) scale(1)" }],
+      { duration: reduit() ? 1 : 560, easing: "cubic-bezier(.34,1.5,.55,1)", fill: "forwards" });
+    a.onfinish = () => { $("micBtn").style.visibility = ""; c.remove(); if (origineVeil === c) origineVeil = null; };
+  }
   function ouvrirVeil(){
     const v = $("veil"); clearTimeout(veilFin);
     if (!v.hidden && v.classList.contains("open")) return;
+    if (vol && !vol.arrive) { const v0 = vol; v0.pret.then(() => { if (vol === v0 && (micro.actif() || (navDictee && navDictee.actif()))) ouvrirVeil(); }); return; }
+    if (vol) vol.c.animate([{ opacity: 1 }, { opacity: 0 }], { duration: reduit() ? 1 : 320, delay: reduit() ? 0 : 240, easing: "ease-out", fill: "forwards" });
     const k = geomVeil(); v.classList.remove("closing"); v.hidden = false;
     if (veilAnim) veilAnim.cancel();
     const bg = $("veilBg"), fill = $("veilFill");
@@ -609,7 +647,10 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     requestAnimationFrame(() => v.classList.add("open"));
   }
   function fermerVeil(){
-    const v = $("veil"); if (v.hidden) return;
+    const v = $("veil");
+    if (v.hidden) { poserMic(); return; }
+    if (vol) { const c = vol.c; c.getAnimations().filter(a => a.effect && a.effect.getKeyframes().some(k => "opacity" in k)).forEach(a => a.cancel());
+      c.style.opacity = 0; c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: reduit() ? 1 : 260, delay: reduit() ? 0 : 260, fill: "forwards" }).onfinish = () => { c.style.opacity = 1; }; }
     const k = geomVeil(); v.classList.add("closing"); v.classList.remove("open");
     const bg = $("veilBg"), fill = $("veilFill");
     if (veilAnim) veilAnim.cancel();
@@ -618,7 +659,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     veilAnim = bg.animate([{ transform: `translate3d(0,0,0) scale(${k})` }, { transform: "translate3d(0,0,0) scale(.001)" }],
       { duration: reduit() ? 1 : 480, delay: reduit() ? 0 : 60, easing: "cubic-bezier(.6,0,.75,.2)", fill: "forwards" });
     clearTimeout(veilFin);
-    veilAnim.onfinish = () => { v.hidden = true; v.classList.remove("closing"); f.cancel(); fill.style.opacity = 0; };
+    veilAnim.onfinish = () => { v.hidden = true; v.classList.remove("closing"); f.cancel(); fill.style.opacity = 0; poserMic(); };
   }
   $("veil").addEventListener("click", e => { e.preventDefault(); if (micro.actif() || (navDictee && navDictee.actif())) orbClick(); });
   addEventListener("resize", () => { if (!$("veil").hidden && !$("veil").classList.contains("closing")) { const k = geomVeil(); if (veilAnim) veilAnim.cancel(); $("veilBg").style.transform = `translate3d(0,0,0) scale(${k})`; } });
@@ -644,12 +685,15 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   }
   function orbState(state){
     const on = state === "listening" || state === "busy" || state === "thinking";
+    document.body.classList.toggle("repos", state !== "busy" && state !== "thinking");
+    $("micBtn").classList.toggle("busy", state === "busy" || state === "thinking");
+    $("micBtn").setAttribute("aria-label", state === "listening" ? "Arrêter" : state === "busy" || state === "thinking" ? "Annuler" : "Dicter");
     $("orb").classList.toggle("on", on); $("recTag").hidden = state !== "listening";
     $("orb").setAttribute("aria-label", state === "listening" ? "Arrêter" : "Commencer à parler");
     if (!animerMots(state, $("orbLabel"))) { $("orbLabel").getAnimations().forEach(a => a.cancel()); $("orbLabel").textContent = { listening: "J'écoute…", starting: "Ouverture du micro…" }[state] || "Touche pour parler"; }
     if (state === "listening") { ouvrirVeil(); if (micro.actif()) boucleEcoute(); else { $("veilTime").textContent = ""; $("veilLabel").textContent = "J'écoute…"; } }
-    else fermerVeil();
-    $("orbSub").textContent = state === "listening" ? "Touche quand tu as fini" : state === "busy" || state === "thinking" ? "Touche pour annuler" : "";
+    else if (state !== "starting") fermerVeil();
+    $("orbSub").textContent = "";
   }
   function ajouterDictee(t){
     t = (t || "").trim(); if (!t) return false;
@@ -769,7 +813,25 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     const h = new Date(d.date);
     proposerRenvoi(sess, "Ta dictée " + (dayKey(h) === dayKey() ? "de " : "du " + h.toLocaleDateString("fr-FR", { day: "numeric", month: "long" }) + " à ") + h.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" }) + " n'a pas été transcrite. Elle est gardée de côté.");
   }
-  $("orb").onclick = orbClick;
+  $("orb").onclick = () => micCentre();
+  /* Micro du centre (demande de Fabien le 20/11) : depuis n'importe quel onglet, revient sur Texte et lance ou arrête la dictée. */
+  function micCentre(){
+    if ($("v-dicter").hidden) go("dicter");
+    if (!modeDictee()) return;
+    if (!micro.actif() && !(navDictee && navDictee.actif()) && !transcribing && !running) envolerMic();
+    orbClick();
+  }
+  $("micBtn").onclick = micCentre;
+  /* Écouter dès l'ouverture (réglage, ou adresse avec ?dicter) : au lancement, et au retour dans l'appli après plus de 2 minutes ailleurs. */
+  let cacheeDepuis = 0;
+  function ecouteAuto(force){
+    if (!(force || settings.ouverture) || !isDirect() || !modeDictee() || micro.actif() || session || running || transcribing || !$("onb").hidden) return;
+    micCentre();
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) { cacheeDepuis = Date.now(); return; }
+    if (cacheeDepuis && Date.now() - cacheeDepuis > 120_000) setTimeout(() => ecouteAuto(false), 300);
+  });
 
   /* ================= Sauvegarde =================
      Un fichier JSON avec tout ce que l'appli garde sur le téléphone (clés en option). */
@@ -864,5 +926,6 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   if (!S.get("onb", false)) { drawOnb(); $("onb").hidden = false; }
   $("appVersion").textContent = "Version " + VERSION_APP;
   renderCles(); setupDictation(); reprendreCoffre();
+  setTimeout(() => ecouteAuto(new URLSearchParams(location.search).has("dicter")), 500);
   if ("serviceWorker" in navigator && location.protocol.startsWith("http")) navigator.serviceWorker.register("sw.js").catch(() => {});
 })();

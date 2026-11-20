@@ -1,5 +1,10 @@
 # Avancement
 
+## 20/11/2026 — v15
+- Un seul micro, au centre de la barre du bas, sur tous les onglets (l'onglet Dicter devient « Texte »). Au toucher, il monte au centre en grossissant et la vague part de lui ; à l'arrêt, le violet se rétracte dans le bouton qui redescend avec un rebond. Roue autour du micro pendant le travail (toucher = annuler). Le gros micro de la page a disparu.
+- Réglage « Écouter dès l'ouverture » (Comportement) : au lancement, et au retour après plus de 2 min ailleurs. L'adresse `?dicter` fait pareil une fois.
+- Mesuré sur Chromium : 60 images/s, aucune image lente pendant l'envol et le retour.
+
 ## 20/11/2026 — v14
 - Écran d'écoute allégé : plus de « Sauvegarde dans un instant » ni de compteur de morceaux. Restent le micro, les barres, le chrono, « J'écoute… » et « Touche n'importe où pour arrêter ». La sauvegarde et le découpage continuent en fond.
 

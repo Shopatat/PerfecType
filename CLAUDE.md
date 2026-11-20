@@ -14,7 +14,7 @@
   - Style appris = paires (brut → version retouchée gardée), 12 max, les 4 plus proches de la destination dans le prompt.
   - Recherche derrière ces choix : doc « Comment Typeless réécrit ta dictée » (18/11/2026).
 - Version affichée dans Réglages : `VERSION_APP` en haut de `js/app.js`, à monter avec `VERSION` de `sw.js`.
-- Pendant l'enregistrement : voile violet plein écran (`#veil`, disque centré sur le micro qui passe de scale(0) à scale(1), retour à l'arrêt). Un appui n'importe où arrête. Demandé par Fabien le 19/11, à garder.
+- Pendant l'enregistrement : voile violet plein écran (`#veil`, disque centré sur le micro en vol qui passe de scale(0) à scale(1), retour à l'arrêt). Un appui n'importe où arrête. Demandé par Fabien le 19/11, à garder.
 - Barre d'état iPhone en `black-translucent` : l'appli passe sous l'encoche (heure et réseau en blanc). `.topband` (dégradé de l'appli, ou le fond en sombre) garde l'heure lisible ; le haut de `.app` et du voile tient compte de `safe-area-inset-top`.
 - Vague : petit disque (240 px) agrandi en `transform` via `element.animate`, puis fondu vers `.veil-fill`. Ne pas revenir à un disque géant ni changer `theme-color` pendant l'animation (ça saccadait sur iPhone).
 - Couleurs du voile : variables `--v1`…`--v4`, `--vglow`, `--vorb` dans `css/style.css`, version plus sombre en mode sombre (demande de Fabien le 19/11).
@@ -23,5 +23,7 @@
 - Icône « L'onde chromée » : cinq barres en métal poli teinté lilas + deux éclats, sur le dégradé violet (`outils/icones.js`).
 - Épure (demande de Fabien le 19/11, v10) : pas d'annotations superflues, pas de police à chasse fixe ni de majuscules espacées ; titres d'encadrés en `--display`, phrases courtes. Ne pas rajouter d'explications sur des actions évidentes.
 - Écran d'écoute (20/11, v14) : micro, barres, chrono, « J'écoute… » / « Je n'entends rien… », « Touche n'importe où pour arrêter ». Pas d'état de sauvegarde ni de compteur de morceaux : ce qui se passe en fond n'intéresse pas Fabien.
+- Micro unique (20/11, v15) : `#micBtn` au centre de la barre d'onglets. `envolerMic()` fait voler une copie (`.micvol`) jusqu'au centre du voile, la vague part d'elle ; `poserMic()` la ramène avec rebond après la fermeture. `#orb` reste dans le DOM mais caché. `body.repos` cache la zone d'état hors travail. Transform et opacity seulement.
+- « Écouter dès l'ouverture » (`settings.ouverture`, ou `?dicter`) : les raccourcis d'icône du manifeste n'existent pas sur iOS pour une web-app, d'où ce réglage.
 - Mots d'attente : `MOTS_ATTENTE` dans `js/app.js`, tirés au hasard et renouvelés toutes les 2,2 s (idée de Fabien le 19/11, l'appli « vit »). On peut en ajouter, garder le même ton.
 - Pistes pas faites : clavier iOS maison (vraie dictée dans toutes les applis, demande une appli native), raccourci global sur Mac, synchro entre appareils.
