@@ -1,4 +1,4 @@
-const VERSION_APP = "15 · 20/11/2026";
+const VERSION_APP = "16 · 20/11/2026";
 import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT } from "./ia.js";
 
 (() => {
@@ -563,9 +563,9 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
       $("stage").classList.add("live");
       const n = micro.niveau(); lisse = Math.max(n, lisse * 0.85);
       if (n > 0.04) dernierSon = Date.now();
-      bars.forEach((b, k) => { const f = [0.5, 0.8, 1, 0.7, 0.95, 0.6, 0.45][k] || 0.7; b.style.height = Math.round(4 + lisse * 30 * f) + "px"; });
+      if (!document.body.classList.contains("direct")) bars.forEach((b, k) => { const f = [0.5, 0.8, 1, 0.7, 0.95, 0.6, 0.45][k] || 0.7; b.style.height = Math.round(4 + lisse * 30 * f) + "px"; });
       const t = now0();
-      vbars.forEach((b, k) => { const j = 0.75 + 0.25 * Math.sin(t / 140 + k * 1.7); b.style.height = Math.round(6 + Math.min(1, lisse * 1.6) * 50 * formes[k] * j) + "px"; });
+      if (veilPret) vbars.forEach((b, k) => { const j = 0.75 + 0.25 * Math.sin(t / 140 + k * 1.7); b.style.height = Math.round(6 + Math.min(1, lisse * 1.6) * 50 * formes[k] * j) + "px"; });
       const now = Date.now();
       if (now - dernierTexte > 300 && session) {
         dernierTexte = now;
@@ -599,7 +599,8 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     return R / 120;
   }
   /* Le micro du bas glisse vers le centre en grossissant ; la vague part de lui. À l'arrêt, le violet se rétracte dans le bouton, qui redescend avec un léger rebond. */
-  let vol = null;
+  let vol = null, veilPret = false, centreCache = null;
+  addEventListener("resize", () => { centreCache = null; });
   function centreEcoute(){
     const v = $("veil"), cache = v.hidden, vin = v.querySelector(".veil-in");
     if (cache) { v.style.visibility = "hidden"; v.hidden = false; }
@@ -612,19 +613,29 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   function envolerMic(){
     if (vol) return;
     const b = $("micBtn"), r = b.getBoundingClientRect(); if (!r.width) return;
-    const t = centreEcoute(), c = b.cloneNode(true);
-    c.removeAttribute("id"); c.classList.remove("busy"); c.classList.add("micvol"); c.setAttribute("aria-hidden", "true");
-    Object.assign(c.style, { left: r.left + "px", top: r.top + "px", width: r.width + "px", height: r.height + "px" });
+    const t = centreCache || (centreCache = centreEcoute()), c = document.createElement("div");
+    c.className = "micvol"; c.setAttribute("aria-hidden", "true");
+    c.innerHTML = '<span class="anneau"></span><span class="disque">' + b.querySelector("svg").outerHTML + "</span>";
+    const bord = parseFloat(getComputedStyle(b).borderTopWidth) || 0; // le disque visible, sans la bordure couleur fond
+    const d = r.width - 2 * bord;
+    Object.assign(c.style, { left: r.left + bord + "px", top: r.top + bord + "px", width: d + "px", height: d + "px" });
     document.body.appendChild(c); b.style.visibility = "hidden";
-    const dx = t.x - (r.left + r.width / 2), dy = t.y - (r.top + r.height / 2), s = t.d / r.width;
+    const dx = t.x - (r.left + r.width / 2), dy = t.y - (r.top + r.height / 2), s = t.d / d;
     const a = c.animate([{ transform: "translate(0,0) scale(1)" }, { transform: `translate(${dx}px,${dy}px) scale(${s})` }],
       { duration: reduit() ? 1 : 420, easing: "cubic-bezier(.3,.7,.2,1)", fill: "forwards" });
     vol = { c, dx, dy, s, arrive: false };
-    vol.pret = a.finished.then(() => { if (vol) vol.arrive = true; }).catch(() => {});
+    vol.pret = a.finished.then(() => { if (vol) { vol.arrive = true; c.classList.add("attente"); } }).catch(() => {});
     origineVeil = c;
   }
+  let finEnregistrement = null; // promesse : l'enregistreur a fini (le bouton attend au centre en respirant)
   function poserMic(){
-    const v0 = vol; if (!v0) return; vol = null;
+    const v0 = vol; if (!v0 || v0.enAttente) return;
+    if (finEnregistrement && !v0.attendu) {
+      v0.attendu = v0.enAttente = true; v0.c.classList.add("attente");
+      Promise.all([finEnregistrement.catch(() => {}), new Promise(r => setTimeout(r, reduit() ? 0 : 450))]).then(() => { finEnregistrement = null; v0.enAttente = false; poserMic(); });
+      return;
+    }
+    vol = null; v0.c.classList.remove("attente");
     const { c, dx, dy, s } = v0;
     c.getAnimations().forEach(a => a.cancel());
     c.style.transform = `translate(${dx}px,${dy}px) scale(${s})`;
@@ -636,6 +647,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     const v = $("veil"); clearTimeout(veilFin);
     if (!v.hidden && v.classList.contains("open")) return;
     if (vol && !vol.arrive) { const v0 = vol; v0.pret.then(() => { if (vol === v0 && (micro.actif() || (navDictee && navDictee.actif()))) ouvrirVeil(); }); return; }
+    if (vol) vol.c.classList.remove("attente");
     if (vol) vol.c.animate([{ opacity: 1 }, { opacity: 0 }], { duration: reduit() ? 1 : 320, delay: reduit() ? 0 : 240, easing: "ease-out", fill: "forwards" });
     const k = geomVeil(); v.classList.remove("closing"); v.hidden = false;
     if (veilAnim) veilAnim.cancel();
@@ -643,15 +655,16 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     fill.getAnimations().forEach(a => a.cancel()); fill.style.opacity = 0;
     veilAnim = bg.animate([{ transform: "translate3d(0,0,0) scale(.001)" }, { transform: `translate3d(0,0,0) scale(${k})` }],
       { duration: reduit() ? 1 : 620, easing: "cubic-bezier(.22,.8,.24,1)", fill: "forwards" });
-    veilAnim.onfinish = () => { fill.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, easing: "ease-out", fill: "forwards" }); };
+    veilAnim.onfinish = () => { veilPret = true; fill.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 220, easing: "ease-out", fill: "forwards" }); if (ongletApres) { ongletApres = false; go("dicter"); } };
     requestAnimationFrame(() => v.classList.add("open"));
   }
   function fermerVeil(){
     const v = $("veil");
     if (v.hidden) { poserMic(); return; }
+    if (v.classList.contains("closing")) return; // déjà en train de se refermer
     if (vol) { const c = vol.c; c.getAnimations().filter(a => a.effect && a.effect.getKeyframes().some(k => "opacity" in k)).forEach(a => a.cancel());
       c.style.opacity = 0; c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: reduit() ? 1 : 260, delay: reduit() ? 0 : 260, fill: "forwards" }).onfinish = () => { c.style.opacity = 1; }; }
-    const k = geomVeil(); v.classList.add("closing"); v.classList.remove("open");
+    const k = geomVeil(); v.classList.add("closing"); v.classList.remove("open"); veilPret = false;
     const bg = $("veilBg"), fill = $("veilFill");
     if (veilAnim) veilAnim.cancel();
     fill.getAnimations().forEach(a => a.cancel());
@@ -726,7 +739,10 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
       return;
     }
     if (micro.actif()) {
-      const sess = session, dernier = await micro.arreter();
+      const sess = session;
+      const fin = micro.arreter(); finEnregistrement = fin;
+      orbState("busy"); // ferme le violet tout de suite, sans attendre la fin de l'enregistreur
+      const dernier = await fin;
       if (!dernier && !Object.keys(sess.segs).length) { orbState("idle"); session = null; setStatus("Je n'ai rien entendu. Réessaie en parlant un peu plus longtemps."); return; }
       if (dernier && dernier.blob) planifier(sess, dernier);
       sess.complet = true; coffreSauver(sess);
@@ -815,11 +831,17 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   }
   $("orb").onclick = () => micCentre();
   /* Micro du centre (demande de Fabien le 20/11) : depuis n'importe quel onglet, revient sur Texte et lance ou arrête la dictée. */
+  /* Fluidité (20/11) : ouvrir le micro fige l'iPhone un instant. On fait donc d'abord voler le bouton, on ouvre le micro
+     quand il est posé au centre (immobile, l'à-coup ne se voit pas), puis la vague part. Le changement d'onglet se fait sous le violet. */
+  let ongletApres = false;
   function micCentre(){
-    if ($("v-dicter").hidden) go("dicter");
-    if (!modeDictee()) return;
-    if (!micro.actif() && !(navDictee && navDictee.actif()) && !transcribing && !running) envolerMic();
-    orbClick();
+    if (!modeDictee()) { go("dicter"); return; }
+    const demarre = !micro.actif() && !(navDictee && navDictee.actif()) && !transcribing && !running;
+    if (!demarre) { orbClick(); return; }
+    if (vol) return; // déjà en vol
+    ongletApres = $("v-dicter").hidden;
+    envolerMic();
+    if (vol) vol.pret.then(() => requestAnimationFrame(() => orbClick())); else { if (ongletApres) { go("dicter"); ongletApres = false; } orbClick(); }
   }
   $("micBtn").onclick = micCentre;
   /* Écouter dès l'ouverture (réglage, ou adresse avec ?dicter) : au lancement, et au retour dans l'appli après plus de 2 minutes ailleurs. */

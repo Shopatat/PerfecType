@@ -164,9 +164,9 @@ export function enregistreur() {
       actif = false; clearInterval(garde);
       document.removeEventListener("visibilitychange", veillerSiVisible);
       return couper().then(x => {
-        flux.getTracks().forEach(t => t.stop());
-        try { ctxAudio && ctxAudio.close(); } catch {}
-        try { veille && veille.release(); } catch {}
+        // Couper le micro et l'analyse du son fige l'iPhone un instant : on le fait après l'animation de retour du bouton.
+        const f = flux, c = ctxAudio, w = veille;
+        setTimeout(() => { if (f) f.getTracks().forEach(t => t.stop()); try { c && c.close(); } catch {} try { w && w.release(); } catch {} }, 1300);
         rec = null; flux = null; analyse = null; ctxAudio = null; veille = null;
         return x.blob.size > 1000 ? x : (x.i === 0 ? null : { i: x.i, blob: null });
       });

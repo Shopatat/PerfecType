@@ -1,5 +1,10 @@
 # Avancement
 
+## 20/11/2026 — v16
+- Animation du micro fluide sur iPhone : le micro s'allume une fois le bouton posé au centre (anneau qui respire pendant l'attente), le violet se referme dès le toucher d'arrêt, le bouton respire le temps que l'enregistrement se termine puis redescend ; le micro n'est vraiment coupé qu'après (1,3 s). Les barres de la vague ne bougent qu'une fois l'écran couvert.
+- Cercle parfait : le bouton qui vole est un disque neuf découpé en cercle (la copie du bouton gardait un coin carré une fois agrandie).
+- Mesuré avec un processeur ralenti 6× : plus d'image lente au départ (2 à-coups de 75 à 120 ms avant).
+
 ## 20/11/2026 — v15
 - Un seul micro, au centre de la barre du bas, sur tous les onglets (l'onglet Dicter devient « Texte »). Au toucher, il monte au centre en grossissant et la vague part de lui ; à l'arrêt, le violet se rétracte dans le bouton qui redescend avec un rebond. Roue autour du micro pendant le travail (toucher = annuler). Le gros micro de la page a disparu.
 - Réglage « Écouter dès l'ouverture » (Comportement) : au lancement, et au retour après plus de 2 min ailleurs. L'adresse `?dicter` fait pareil une fois.

@@ -214,7 +214,17 @@ textarea.input{min-height:76px;field-sizing:content;resize:vertical;line-height:
 .micbtn.busy::after{opacity:.9;animation:tourne .9s linear infinite}
 @keyframes tourne{to{transform:rotate(360deg)}}
 /* Le micro en vol : copie du bouton qui monte au centre, d'où part la vague (et qui redescend à l'arrêt). */
-.micvol{position:fixed;margin:0;z-index:36;border-color:transparent;pointer-events:none;will-change:transform,opacity;transition:border-color .2s}
+/* Attente au centre (le micro s'ouvre, ou l'enregistrement se termine) : un anneau qui respire et le micro qui palpite. */
+/* Cercle parfait (20/11) : un disque neuf, découpé en cercle, plutôt qu'une copie du bouton (la copie gardait un coin carré une fois agrandie). */
+.micvol{position:fixed;margin:0;z-index:36;border-radius:50%;pointer-events:none;will-change:transform,opacity;box-shadow:0 12px 26px -10px var(--fuchsia)}
+.micvol .disque{position:absolute;inset:0;border-radius:50%;clip-path:circle(50% at 50% 50%);background:var(--grad);color:#fff;display:grid;place-items:center}
+.micvol .disque svg{width:28px;height:28px}
+.micvol .anneau{position:absolute;inset:-3px;border-radius:50%;border:2px solid rgba(255,255,255,.75);opacity:0}
+.micvol.attente .anneau{animation:respire 1s cubic-bezier(.2,.6,.3,1) infinite}
+.micvol.attente .disque svg{animation:souffle 1s ease-in-out infinite}
+@keyframes respire{0%{transform:scale(1);opacity:.75}100%{transform:scale(1.7);opacity:0}}
+@keyframes souffle{50%{transform:scale(1.1)}}
+@media (prefers-reduced-motion:reduce){.micvol.attente .anneau,.micvol.attente .disque svg{animation:none}}
 /* Un seul micro, celui du bas (20/11) : le gros micro de la page disparaît. La zone ne s'affiche que pendant le travail (mots d'attente). */
 #orb{display:none}
 body.repos .stage{display:none}
