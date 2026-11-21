@@ -1,5 +1,8 @@
 # Avancement
 
+## 21/11/2026 — v25
+- Mode « Demande ce que tu veux » : appui long (0,65 s, anneau turquoise qui se remplit) sur le micro, voile nuit bleutée → turquoise, étincelle au centre. Claude décide : transformer le texte affiché, créer quelque chose de toutes pièces, ou garder une consigne pour la prochaine dictée (pastille au-dessus de la barre, un appui l'annule). L'appui court ne change pas.
+
 ## 21/11/2026 — v24
 - Tour d'horizon : onglets et micro centrés au pixel dans la barre (la ligne de la grille grandissait à la taille du micro et poussait tout de 3 px vers le bas ; barre à 70 px), fondu sous la barre plus net, repère du jour de l'activité en violet au lieu de noir, « English » → « Anglais ».
 

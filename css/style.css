@@ -347,23 +347,26 @@ body.direct .orb{width:112px;height:112px}
 .set-row>.seg{flex-direction:row;flex:none}
 #appList:empty{display:none}
 
-/* Mode « Demande ce que tu veux » (appui long, aperçu du 21/11) : deux teintes à comparer. */
+/* Mode « Demande ce que tu veux » (appui long, 21/11) : teinte nuit bleutée → turquoise, choisie par Fabien. */
 @property --p{syntax:"<number>";inherits:false;initial-value:0}
+:root{--dring:#2BC8D9;--dgrad:linear-gradient(135deg,#2A1C6E,#3A4FB0 50%,#2BC8D9)}
 .micbtn{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;touch-action:manipulation}
 .micbtn::before{content:"";position:absolute;inset:-6px;border-radius:50%;pointer-events:none;opacity:0;--p:0;
   background:conic-gradient(var(--dring) calc(var(--p) * 1turn),transparent 0);
   -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3.5px),#000 calc(100% - 3px));mask:radial-gradient(farthest-side,transparent calc(100% - 3.5px),#000 calc(100% - 3px))}
 .micbtn.charge::before{opacity:1;--p:1;transition:--p .65s linear,opacity .12s}
-body.d-nuit{--dring:#2BC8D9;--dgrad:linear-gradient(135deg,#2A1C6E,#3A4FB0 50%,#2BC8D9)}
-body.d-corail{--dring:#FF8A7A;--dgrad:linear-gradient(135deg,#6A1A8A,#C0399E 50%,#FF8A7A)}
-body.demande.d-nuit{--v1:#2BC8D9;--v2:#2A8FC9;--v3:#3A4FB0;--v4:#2A1C6E;--vglow:rgba(120,240,255,.30)}
-body.demande.d-corail{--v1:#FF8A7A;--v2:#F0567F;--v3:#C0399E;--v4:#6A1A8A;--vglow:rgba(255,200,150,.32)}
-@media (prefers-color-scheme: dark){
-  :root:not([data-theme="light"]) body.demande.d-nuit{--v1:#1C8597;--v2:#1D5C8E;--v3:#262F7A;--v4:#140F3D;--vglow:rgba(80,220,240,.15)}
-  :root:not([data-theme="light"]) body.demande.d-corail{--v1:#B5545A;--v2:#A23A63;--v3:#7A2675;--v4:#3A0F52;--vglow:rgba(255,160,120,.15)}}
-:root[data-theme="dark"] body.demande.d-nuit{--v1:#1C8597;--v2:#1D5C8E;--v3:#262F7A;--v4:#140F3D}
-:root[data-theme="dark"] body.demande.d-corail{--v1:#B5545A;--v2:#A23A63;--v3:#7A2675;--v4:#3A0F52}
+body.demande{--v1:#2BC8D9;--v2:#2A8FC9;--v3:#3A4FB0;--v4:#2A1C6E;--vglow:rgba(120,240,255,.30)}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]) body.demande{--v1:#1C8597;--v2:#1D5C8E;--v3:#262F7A;--v4:#140F3D;--vglow:rgba(80,220,240,.15)}}
+:root[data-theme="dark"] body.demande{--v1:#1C8597;--v2:#1D5C8E;--v3:#262F7A;--v4:#140F3D;--vglow:rgba(80,220,240,.15)}
 body.demande .micvol .disque{background:var(--dgrad)}
 .veil-orb .ico-demande{display:none}
 body.demande .veil-orb .ico-dicter{display:none}
 body.demande .veil-orb .ico-demande{display:block}
+/* Consigne gardée pour la prochaine dictée : pastille au-dessus de la barre, un appui l'annule. */
+.consigne{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(var(--tabh) + 30px + env(safe-area-inset-bottom,0px) + 100% - var(--he,100%));z-index:19;
+  display:inline-flex;align-items:center;gap:7px;max-width:calc(100% - 48px);padding:8px 12px 8px 11px;border:0;border-radius:999px;cursor:pointer;
+  background:var(--dgrad);color:#fff;font:600 .84rem/1.2 var(--body);box-shadow:0 10px 24px -10px #2A8FC9}
+.consigne span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.consigne svg{width:15px;height:15px;flex:none}
+.consigne .x{width:13px;height:13px;opacity:.8}
+.consigne[hidden]{display:none}

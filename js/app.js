@@ -1,4 +1,4 @@
-const VERSION_APP = "24 · 21/11/2026";
+const VERSION_APP = "25 · 21/11/2026";
 import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT, prechargerSDK } from "./ia.js";
 
 (() => {
@@ -96,7 +96,7 @@ import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coff
      Une partie fixe (le prompt système, toujours identique : règles + destination + dictionnaire + exemples)
      et une partie variable (le message : la dictée entre balises, et le contexte éventuel).
      Règle n° 1 : en Dicter et Traduire, Claude ne répond jamais à ce qu'on dicte, il le met au propre. */
-  const esc4xml = s => String(s).replace(/<\/?(transcription|contexte|consigne|texte|question|exemple|brut|final)>/gi, m => m.replace(/[<>]/g, ""));
+  const esc4xml = s => String(s).replace(/<\/?(transcription|contexte|consigne|texte|texte_actuel|demande|question|exemple|brut|final)>/gi, m => m.replace(/[<>]/g, ""));
   function personnalisation(){
     let s = "";
     const terms = dico.map(d => d.w);
@@ -136,6 +136,44 @@ Ne t'invente jamais de destinataire, de signature ou d'objet.
 Formes possibles :
 ${formes}`;
   }
+  /* Mode Demande (appui long sur le micro, 21/11, idée de Fabien) : Claude décide lui-même s'il transforme le texte affiché,
+     s'il crée quelque chose de toutes pièces, ou s'il garde une consigne pour la prochaine dictée. */
+  let consigneSuivante = null, viaDemande = false; // viaDemande : le texte affiché vient d'une demande (pas de compteurs)
+  function promptDemande(demande, texte){
+    return {
+      systeme: `Tu es l'assistant d'une appli de dictée vocale. La personne a gardé le doigt sur le bouton pour te faire une DEMANDE à la voix (la transcription a pu mal entendre certains mots : interprète avec bon sens). ${texte ? "Le texte actuellement à l'écran (son dernier texte) est fourni entre balises <texte_actuel>." : "Aucun texte n'est à l'écran."}
+
+Décide ce que la personne veut :
+A. Agir sur le texte actuel : le reformuler, le raccourcir, le traduire, changer le ton, le corriger, le mettre en liste, en faire un mail, y répondre… → applique la demande au texte actuel.${texte ? "" : " (Impossible ici : il n'y a pas de texte.)"}
+B. Créer quelque chose : écrire un message, un mail, une idée, un plan, une liste, une réponse…, parfois avec le contenu dicté dans la même phrase (« fais-en un mail pour Paul : dis-lui que… ») → rédige-le.
+C. Fixer seulement ce qu'il faudra faire du PROCHAIN texte qu'elle va dicter, sans en donner le contenu (« le prochain, c'est un mail pour mon patron », « ce que je vais dire, traduis-le en espagnol ») → ne rédige rien.
+Avec un texte à l'écran, si la demande y fait référence (le, ça, ce texte, ce message) ou ne se comprend qu'avec lui, c'est A ; sinon B ou C.
+
+Réponds UNIQUEMENT dans l'un de ces deux formats, sans rien autour :
+- A ou B : <texte>le texte final, prêt à copier et envoyer</texte>
+- C : <consigne titre="deux à quatre mots">la consigne, reformulée clairement pour être appliquée à sa prochaine dictée</consigne>
+
+Écris dans la langue de la personne, sauf si elle demande une autre langue. N'invente aucun fait personnel (nom, date, chiffre) : mets [entre crochets] ce qui manque. Pas de titres markdown.${personnalisation()}`,
+      message: (texte ? `<texte_actuel>\n${esc4xml(texte)}\n</texte_actuel>\n\n` : "") + `<demande>\n${esc4xml(demande)}\n</demande>`,
+      maxTokens: 8000, effort: "low" };
+  }
+  function renderConsigne(){
+    const el = $("consigne"); el.hidden = !consigneSuivante;
+    if (consigneSuivante) $("consigneTxt").textContent = consigneSuivante.titre;
+  }
+  $("consigne").onclick = () => { consigneSuivante = null; renderConsigne(); toast("Consigne annulée"); };
+  async function demandeAction(demande){
+    const texte = !isExample && out.value.trim() ? out.value.trim() : "";
+    const res = await runClaude(promptDemande(demande, texte), "Demande", true);
+    if (res == null) return;
+    const c = res.match(/<consigne(?:\s+titre="([^"]*)")?\s*>([\s\S]*?)<\/consigne>/);
+    if (c && c[2].trim()) { consigneSuivante = { titre: (c[1] || "Consigne").trim(), texte: c[2].trim() }; renderConsigne(); return; }
+    const t = ((res.match(/<texte>([\s\S]*?)(?:<\/texte>|$)/) || [, res])[1] || "").trim();
+    if (!t) { setStatus("Demande non comprise."); return; }
+    out.value = t; lastRaw = demande; lastAI = t; learnedFor = ""; viaDemande = true; setSeg(false); updateMetrics();
+    addHistory(t, "demande", "Demande");
+    if (settings.copy || isDirect()) copyText(t, true);
+  }
   function systemeDicter(trad){
     const app = appById(settings.app);
     const langue = trad ? `Écris le résultat directement en ${LANG_FOR_PROMPT[settings.target]}, comme un natif l'écrirait, prêt à envoyer.`
@@ -149,7 +187,7 @@ ${REGLES_NETTOYAGE}${settings.lists ? REGLE_LISTES : ""}
 LANGUE
 ${langue}
 
-${app.id === "auto" ? blocAuto() : `DESTINATION : ${app.label}\n${app.rule}`}
+${consigneSuivante ? `CONSIGNE DONNÉE À L'AVANCE PAR LA PERSONNE (prioritaire sur la forme et la destination ci-dessous) :\n${consigneSuivante.texte}\n\n` : ""}${app.id === "auto" ? blocAuto() : `DESTINATION : ${app.label}\n${app.rule}`}
 Si un <contexte> est fourni (le message auquel la personne répond, ou le texte déjà écrit), sers-t'en pour le ton, la continuité et l'orthographe des noms, mais ne le recopie pas et n'y réponds pas à sa place.
 
 Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${personnalisation()}`;
@@ -273,7 +311,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   /* ================= Mesures ================= */
   function updateMetrics(){
     const a = lastRaw || raw.value, b = out.value;
-    if (!b.trim() || settings.mode !== "dicter") { $("mWords").textContent = "–"; $("mTics").textContent = "–"; $("mSaved").textContent = "–"; return; }
+    if (!b.trim() || settings.mode !== "dicter" || viaDemande) { $("mWords").textContent = "–"; $("mTics").textContent = "–"; $("mSaved").textContent = "–"; return; }
     $("mWords").textContent = words(a) + " → " + words(b);
     $("mTics").textContent = String(tics(a));
     $("mSaved").textContent = fmtMin(savedMin(words(a), words(b)));
@@ -393,7 +431,8 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     if (m === "modifier" && !context) { setStatus("Texte à modifier manquant."); ctx.focus(); return; }
     const res = await runClaude(buildPrompt(m, text, m === "traduire" ? "" : context), ({ dicter: "Nettoyage", traduire: "Traduction", modifier: "Modification", demander: "Réflexion" })[m], direct === true);
     if (res == null) return;
-    out.value = res; lastRaw = text; lastAI = res; learnedFor = "";
+    if (consigneSuivante && (m === "dicter" || m === "traduire")) { consigneSuivante = null; renderConsigne(); } // une consigne vaut pour une dictée
+    out.value = res; lastRaw = text; lastAI = res; learnedFor = ""; viaDemande = false;
     if (m === "dicter" || m === "traduire") {
       const rw = words(text), cw = words(res), tc = tics(text), sm = savedMin(rw, cw);
       totals.min += sm; totals.count++; totals.words += rw; totals.tics += tc;
@@ -463,7 +502,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     if (diff < 7) return day.toLocaleDateString("fr-FR", { weekday: "long" });
     return day.toLocaleDateString("fr-FR", { day: "numeric", month: "long" });
   }
-  const MODE_TAG = { dicter: "Dictée", traduire: "Traduction", modifier: "Modif", demander: "Question" };
+  const MODE_TAG = { dicter: "Dictée", traduire: "Traduction", modifier: "Modif", demander: "Question", demande: "Demande" };
   function renderHistory(){
     const el = $("hlist"), q = $("q").value.trim().toLowerCase(); el.innerHTML = "";
     const items = hist.filter(h => !q || h.t.toLowerCase().includes(q) || (h.raw || "").toLowerCase().includes(q));
@@ -843,6 +882,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     }
     coffre.oublier(sess.id); orbState("idle");
     const t = ordre.map(i => sess.segs[i].text).filter(Boolean).join(" ");
+    if (sess.demande) { if (t.trim()) demandeAction(t.trim()); else setStatus("Transcription vide."); return; }
     if (!ajouterDictee(t)) { setStatus("Transcription vide."); return; }
     if (settings.auto || isDirect()) goAction(isDirect());
   }
@@ -885,14 +925,14 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   /* Appui long (aperçu du 21/11, idée de Fabien) : on garde le doigt ~0,65 s, un anneau se remplit autour du micro,
      puis le mode « Demande ce que tu veux » s'ouvre (voile d'une autre teinte). On peut relâcher : un appui n'importe où arrête. */
   const DUREE_APPUI_LONG = 650;
-  document.body.classList.add(new URLSearchParams(location.search).get("teinte") === "corail" ? "d-corail" : "d-nuit"); // aperçu : deux teintes à comparer
   let appuiLong = null, ignorerClic = false;
   const finCharge = () => { clearTimeout(appuiLong); appuiLong = null; $("micBtn").classList.remove("charge"); };
   $("micBtn").addEventListener("pointerdown", () => {
+    ignorerClic = false; // le bouton caché pendant le vol peut ne jamais recevoir le clic qui suit un appui long
     if (micro.actif() || transcribing || running || vol || !modeDictee()) return;
     $("micBtn").classList.add("charge");
     appuiLong = setTimeout(() => { appuiLong = null; $("micBtn").classList.remove("charge"); ignorerClic = true;
-      document.body.classList.add("demande"); micCentre(); }, DUREE_APPUI_LONG);
+      document.body.classList.add("demande"); micCentre(); if (session) session.demande = true; }, DUREE_APPUI_LONG);
   });
   ["pointerup", "pointercancel", "pointerleave"].forEach(t => $("micBtn").addEventListener(t, () => { if (appuiLong) finCharge(); }));
   $("micBtn").addEventListener("contextmenu", e => e.preventDefault());
