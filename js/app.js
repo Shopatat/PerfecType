@@ -221,7 +221,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     $("ctxScroller").hidden = !(m === "dicter" || m === "traduire");
     $("langScroller").hidden = m !== "traduire";
     $("segWrap").hidden = m !== "dicter";
-    $("metrics").hidden = m !== "dicter";
+    $("metrics").hidden = true; // compteurs retirés le 21/11 (Fabien : « très facultatif »)
     if (m !== "dicter") setSeg(false);
     const d = isDirect();
     document.body.classList.toggle("direct", d);
