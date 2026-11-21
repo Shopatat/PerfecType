@@ -1,5 +1,9 @@
 # Avancement
 
+## 21/11/2026 — v23
+- Bandeau du haut fixe, couleur du fond (plus de bande violette pleine) : le contenu défile dessous avec un léger fondu, façon Typeless.
+- Barre d'onglets plus large et translucide façon verre, contenu flouté et estompé dessous. Bouton micro centré dans la barre, surélevé par son ombre.
+
 ## 21/11/2026 — v22
 - Barre d'onglets coupée en bas (v21) : l'`overflow:hidden` de `html, body` rognait l'affichage à la hauteur trop courte qu'iOS donne au lancement. Retiré ; `html, body` prennent la hauteur de l'écran (`--he`).
 
