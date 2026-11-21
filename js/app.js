@@ -598,7 +598,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
         dernierTexte = now;
         const entend = !micro.audioOk() || Date.now() - dernierSon < 2500;
         $("veilTime").textContent = fmtDuree(micro.duree());
-        $("veilLabel").textContent = entend ? "J'écoute…" : "Je n'entends rien…";
+        $("veilLabel").textContent = entend ? (document.body.classList.contains("demande") ? "Demande ce que tu veux…" : "J'écoute…") : "Je n'entends rien…";
         $("orbLabel").textContent = entend ? "J'écoute… " + fmtDuree(micro.duree()) : "J'écoute (je n'entends rien)… " + fmtDuree(micro.duree());
       }
       ecouteBoucle = requestAnimationFrame(pas);
@@ -676,7 +676,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     enCours.forEach(a => a.cancel());
     const a = c.animate([{ transform: depart === "none" ? `translate(${dx}px,${dy}px) scale(${s})` : depart }, { transform: "translate(0,0) scale(1)" }],
       { duration: reduit() ? 1 : RESSORT_DESCENTE.duree, easing: RESSORT_DESCENTE.easing, fill: "forwards" });
-    a.onfinish = () => { $("micBtn").style.visibility = ""; c.remove(); if (origineVeil === c) origineVeil = null; };
+    a.onfinish = () => { $("micBtn").style.visibility = ""; c.remove(); if (origineVeil === c) origineVeil = null; document.body.classList.remove("demande"); };
   }
   function ouvrirVeil(){
     const v = $("veil"); clearTimeout(veilFin);
@@ -693,7 +693,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
   }
   function fermerVeil(){
     const v = $("veil");
-    if (v.hidden) { poserMic(); return; }
+    if (v.hidden) { poserMic(); if (!vol) document.body.classList.remove("demande"); return; }
     if (v.classList.contains("closing")) return; // déjà en train de se refermer
     if (vol) { const c = vol.c; c.getAnimations().filter(a => a.effect && a.effect.getKeyframes().some(k => "opacity" in k)).forEach(a => a.cancel());
       c.style.opacity = 0; c.animate([{ opacity: 0 }, { opacity: 1 }], { duration: reduit() ? 1 : 200, delay: reduit() ? 0 : 90, fill: "forwards" }).onfinish = () => { c.style.opacity = 1; };
@@ -738,7 +738,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     $("orb").classList.toggle("on", on); $("recTag").hidden = state !== "listening";
     $("orb").setAttribute("aria-label", state === "listening" ? "Arrêter" : "Commencer à parler");
     if (!animerMots(state, $("orbLabel"))) { $("orbLabel").getAnimations().forEach(a => a.cancel()); $("orbLabel").textContent = { listening: "J'écoute…", starting: "Ouverture du micro…" }[state] || "Dicter"; }
-    if (state === "listening") { ouvrirVeil(); if (micro.actif()) boucleEcoute(); else { $("veilTime").textContent = ""; $("veilLabel").textContent = "J'écoute…"; } }
+    if (state === "listening") { ouvrirVeil(); if (micro.actif()) boucleEcoute(); else { $("veilTime").textContent = ""; $("veilLabel").textContent = document.body.classList.contains("demande") ? "Demande ce que tu veux…" : "J'écoute…"; } }
     else if (state !== "starting") fermerVeil();
     $("orbSub").textContent = "";
   }
@@ -882,7 +882,21 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     if (vol) setTimeout(() => { if (vol && (demarrage || micro.actif())) ouvrirVeil(); }, reduit() ? 0 : 150);
     else if (ongletApres) { go("dicter"); ongletApres = false; }
   }
-  $("micBtn").onclick = micCentre;
+  /* Appui long (aperçu du 21/11, idée de Fabien) : on garde le doigt ~0,65 s, un anneau se remplit autour du micro,
+     puis le mode « Demande ce que tu veux » s'ouvre (voile d'une autre teinte). On peut relâcher : un appui n'importe où arrête. */
+  const DUREE_APPUI_LONG = 650;
+  document.body.classList.add(new URLSearchParams(location.search).get("teinte") === "corail" ? "d-corail" : "d-nuit"); // aperçu : deux teintes à comparer
+  let appuiLong = null, ignorerClic = false;
+  const finCharge = () => { clearTimeout(appuiLong); appuiLong = null; $("micBtn").classList.remove("charge"); };
+  $("micBtn").addEventListener("pointerdown", () => {
+    if (micro.actif() || transcribing || running || vol || !modeDictee()) return;
+    $("micBtn").classList.add("charge");
+    appuiLong = setTimeout(() => { appuiLong = null; $("micBtn").classList.remove("charge"); ignorerClic = true;
+      document.body.classList.add("demande"); micCentre(); }, DUREE_APPUI_LONG);
+  });
+  ["pointerup", "pointercancel", "pointerleave"].forEach(t => $("micBtn").addEventListener(t, () => { if (appuiLong) finCharge(); }));
+  $("micBtn").addEventListener("contextmenu", e => e.preventDefault());
+  $("micBtn").onclick = () => { if (ignorerClic) { ignorerClic = false; return; } micCentre(); };
   /* Allumer le micro fige l'iPhone un instant : on le fait dès que le doigt touche le bouton (il est immobile, enfoncé),
      avant qu'il ne s'envole. Sans appui complet dans la seconde et demie, on relâche le micro. */
   let demarrage = null, demarrageClique = false;
