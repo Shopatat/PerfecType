@@ -3,7 +3,8 @@ html{-webkit-text-size-adjust:100%}
 /* La page elle-même ne défile jamais : c'est .app, posée sur tout l'écran, qui défile. Sur iPhone en plein écran,
    le défilement de la page se décalait parfois au lancement (barre d'onglets trop haut jusqu'au premier geste, 20/11). */
 /* --he : vraie hauteur de l'écran sur iPhone en plein écran (index.html), car iOS donne parfois une hauteur trop courte au lancement. */
-html,body{height:100%;overflow:hidden}body{margin:0;overscroll-behavior:none}
+/* Pas d'overflow:hidden ici : sur iPhone il rognait tout à la hauteur trop courte donnée au lancement (v21, barre coupée). */
+html,body{height:var(--he,100%)}body{margin:0;overscroll-behavior:none}
 /* Layout: appli mobile une colonne (max 560px). Quatre onglets en bas : Dicter, Activité, Historique, Réglages. Sobre, beaucoup d'air, le violet réservé à l'action. */
 :root{
   --bg:#F7F4FA; --surface:#FFFFFF; --surface2:#F0EBF6; --fg:#1A1023; --muted:#65587A; --faint:#9A8FAA; --line:#E4DCEE;

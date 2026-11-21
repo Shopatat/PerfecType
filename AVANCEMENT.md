@@ -1,5 +1,8 @@
 # Avancement
 
+## 21/11/2026 — v22
+- Barre d'onglets coupée en bas (v21) : l'`overflow:hidden` de `html, body` rognait l'affichage à la hauteur trop courte qu'iOS donne au lancement. Retiré ; `html, body` prennent la hauteur de l'écran (`--he`).
+
 ## 20/11/2026 — v21
 - La v20 laissait la barre d'onglets beaucoup trop haut sur iPhone : iOS donne au lancement une hauteur de page trop courte, et sans défilement de page plus rien ne la corrigeait. La page, la barre, le voile et la présentation prennent maintenant la hauteur de l'écran lui-même (`--he`, posée dans `index.html` en plein écran iOS).
 
