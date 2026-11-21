@@ -1,5 +1,8 @@
 # Avancement
 
+## 21/11/2026 — v24
+- Tour d'horizon : onglets et micro centrés au pixel dans la barre (la ligne de la grille grandissait à la taille du micro et poussait tout de 3 px vers le bas ; barre à 70 px), fondu sous la barre plus net, repère du jour de l'activité en violet au lieu de noir, « English » → « Anglais ».
+
 ## 21/11/2026 — v23
 - Bandeau du haut fixe, couleur du fond (plus de bande violette pleine) : le contenu défile dessous avec un léger fondu, façon Typeless.
 - Barre d'onglets plus large et translucide façon verre, contenu flouté et estompé dessous. Bouton micro centré dans la barre, surélevé par son ombre.

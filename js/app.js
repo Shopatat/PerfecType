@@ -1,4 +1,4 @@
-const VERSION_APP = "23 · 21/11/2026";
+const VERSION_APP = "24 · 21/11/2026";
 import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT, prechargerSDK } from "./ia.js";
 
 (() => {
@@ -246,7 +246,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
       T.appendChild(b);
     });
     const O = $("langOut"); O.innerHTML = "";
-    [["fr", "Français"], ["en", "English"], ["auto", "Langue parlée"]].forEach(([v, l]) => {
+    [["fr", "Français"], ["en", "Anglais"], ["auto", "Langue parlée"]].forEach(([v, l]) => {
       const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = l; b.setAttribute("aria-pressed", String(settings.lang === v));
       b.onclick = () => { settings.lang = v; saveSettings(); renderTargets(); };
       O.appendChild(b);
