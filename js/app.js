@@ -1,4 +1,4 @@
-const VERSION_APP = "25 · 21/11/2026";
+const VERSION_APP = "26 · 21/11/2026";
 import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coffre, MODELES, STT, prechargerSDK } from "./ia.js";
 
 (() => {
@@ -13,6 +13,7 @@ import { claude as appelClaude, transcrire, enregistreur, dicteeNavigateur, coff
   };
   const oldSettings = S.old("settings", {});
   const settings = Object.assign({ auto: true, copy: false, lists: true, learn: true, lang: "fr", app: "auto", mode: "dicter", target: "en", appearance: "system", targets: ["en", "es", "it", "de"], model: "claude-opus-5-5", stt: "groq", direct: true, ouverture: false }, S.get("settings", {}));
+  settings.mode = "dicter"; // 21/11 : un seul mode visible, le reste passe par l'appui long (mode Demande)
   if (!settings.autoV1) { if (settings.app === "partout") settings.app = "auto"; settings.autoV1 = true; S.set("settings", settings); } // v19 : Auto par défaut
   if (!MODELES[settings.model]) settings.model = "claude-opus-5-5";
   if (!STT[settings.stt]) settings.stt = "groq";
@@ -519,7 +520,7 @@ Si la transcription est vide ou inintelligible, renvoie une chaîne vide.${perso
     const act = document.createElement("div"); act.className = "hact";
     const mk = (icon, label, cls) => { const b = document.createElement("button"); b.type = "button"; b.innerHTML = icon; b.setAttribute("aria-label", label); b.title = label; if (cls) b.className = cls; act.appendChild(b); return b; };
     const open = () => {
-      leaveExample(); settings.mode = h.mode || "dicter"; saveSettings();
+      leaveExample(); settings.mode = "dicter"; saveSettings();
       out.value = h.t; lastRaw = h.raw || ""; lastAI = h.t; raw.value = h.raw || ""; ctx.value = h.ctx || ""; versions = []; updateUndo();
       renderMode(); updateMetrics(); setSeg(false); go("dicter"); setTimeout(() => $("resultCard").scrollIntoView({ behavior: "smooth", block: "start" }), 60);
     };

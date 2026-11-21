@@ -40,7 +40,8 @@ if (navigator.standalone) (function(){
 
   <!-- ====== DICTER ====== -->
   <main class="view" id="v-dicter">
-    <div class="modes" role="tablist" aria-label="Mode">
+    <!-- Onglets Traduire / Modifier / Demander retirés le 21/11 : l'appui long sur le micro (mode Demande) les remplace. -->
+    <div class="modes" role="tablist" aria-label="Mode" hidden>
       <button class="mode" role="tab" data-m="dicter"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="2.5" width="6" height="11.5" rx="3"/><path d="M5 10.5a7 7 0 0 0 14 0M12 17.5V21"/></svg>Dicter</button>
       <button class="mode" role="tab" data-m="traduire"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 5h8M8 3v2M10 5c-1 4-3 7-6 9M6 9c1 2 3 4 6 5"/><path d="M13 21l4-9 4 9M14.5 18h5"/></svg>Traduire</button>
       <button class="mode" role="tab" data-m="modifier"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="M13.5 6.5l4 4"/></svg>Modifier</button>
@@ -94,7 +95,7 @@ if (navigator.standalone) (function(){
         <div class="metric"><b id="mTics">–</b><span>tics retirés</span></div>
         <div class="metric"><b id="mSaved">–</b><span>gagnées</span></div>
       </div>
-      <div class="quick" id="quick"></div>
+      <div class="quick" id="quick" hidden></div>
       <div class="row">
         <button class="btn dark copy" id="copyBtn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="12" height="12" rx="2.5"/><path d="M5 15V5a2 2 0 0 1 2-2h10"/></svg><span id="copyLabel">Copier</span></button>
         <button class="btn soft icon" id="undoBtn" aria-label="Version précédente" title="Version précédente" disabled><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/></svg></button>
@@ -172,8 +173,8 @@ if (navigator.standalone) (function(){
       <h2>Langues</h2>
       <div class="eyebrow"><span>Écriture</span></div>
       <div class="wrapchips" id="langOut"></div>
-      <div class="eyebrow" style="margin-top:4px"><span>Traduction</span></div>
-      <div class="wrapchips" id="langTargets"></div>
+      <div class="eyebrow" style="margin-top:4px" hidden><span>Traduction</span></div>
+      <div class="wrapchips" id="langTargets" hidden></div>
     </section>
 
     <section class="card navcard">

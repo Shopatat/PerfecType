@@ -1,5 +1,8 @@
 # Avancement
 
+## 21/11/2026 — v26
+- Écran Texte épuré : plus d'onglets Traduire / Modifier / Demander ni de bulles (Plus court, Plus pro…), l'appui long sur le micro (mode Demande) fait tout ça. Langues de traduction retirées des Réglages.
+
 ## 21/11/2026 — v25
 - Mode « Demande ce que tu veux » : appui long (0,65 s, anneau turquoise qui se remplit) sur le micro, voile nuit bleutée → turquoise, étincelle au centre. Claude décide : transformer le texte affiché, créer quelque chose de toutes pièces, ou garder une consigne pour la prochaine dictée (pastille au-dessus de la barre, un appui l'annule). L'appui court ne change pas.
 
