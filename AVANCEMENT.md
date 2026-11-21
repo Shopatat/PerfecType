@@ -1,5 +1,8 @@
 # Avancement
 
+## 21/11/2026 — v27
+- Bouton micro plus grand (66 px, barre de 78 px) avec un halo violet qui respire doucement au repos, pour mieux le viser et attirer l'œil.
+
 ## 21/11/2026 — v26
 - Écran Texte épuré : plus d'onglets Traduire / Modifier / Demander ni de bulles (Plus court, Plus pro…), l'appui long sur le micro (mode Demande) fait tout ça. Langues de traduction retirées des Réglages. Compteurs sous le résultat (mots, tics, secondes) retirés : il reste Copier et Retour.
 
